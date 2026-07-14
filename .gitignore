@@ -1,0 +1,25 @@
+# Private device and recovery material
+/artifacts/
+/backups/
+/private/
+/notes.md
+
+# Firmware/build products
+*.bin
+*.elf
+*.hex
+*.map
+*.zip
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+*.log
