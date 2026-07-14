@@ -1018,8 +1018,9 @@ documentation and a brief non-technical README suitable for sharing with Yuki.
 
 **Repository:** `https://github.com/lukec/creator-clubs`
 
-**Public scope:** top-level README, project `AGENTS.md`, `.gitignore`, and the
-maintained `docs/` tree.
+**Initial public scope:** top-level README, project `AGENTS.md`, `.gitignore`,
+and the maintained `docs/` tree. The MIT `LICENSE` was added immediately after
+Luke selected it.
 
 **Local-only scope:** flash dumps and extracted partitions under `backups/`,
 downloaded/generated firmware under `artifacts/`, the stale original
@@ -1041,3 +1042,14 @@ whitespace check passes; and index-only scans found no exact MAC/home address,
 machine path, USB serial, personal email, token/private-key pattern, or assigned
 credential. The only literal IP range is the generic private-network example
 `10.0.0.0/8`.
+
+## 2026-07-13 17:38 PDT — MIT License selected
+
+Luke selected the MIT License for the public project repository. The standard
+MIT text uses `Copyright (c) 2026 Creator Clubs contributors` so current and
+future contributors are covered without asserting ownership of third-party
+work.
+
+The README states that the license applies to original repository material.
+Flowtoys hardware/firmware, BenTo, libraries, and other dependencies remain
+under their respective owners' terms.

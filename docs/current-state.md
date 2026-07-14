@@ -1,6 +1,6 @@
 # Current state
 
-Last updated: 2026-07-13 17:35 PDT
+Last updated: 2026-07-13 17:38 PDT
 
 ## Equipment and ownership
 
@@ -23,18 +23,19 @@ The project has a public GitHub repository:
 https://github.com/lukec/creator-clubs
 ```
 
-The tracked scope is the short project README, project instructions, and the
-maintained `docs/` record. Full flash backups, downloaded firmware, generated
-firmware images, the superseded session handoff, and the private device/home-lab
-inventory remain local and Git-ignored.
+The tracked scope is the short project README, MIT license, project
+instructions, and the maintained `docs/` record. Full flash backups, downloaded
+firmware, generated firmware images, the superseded session handoff, and the
+private device/home-lab inventory remain local and Git-ignored.
 
 Before publication, exact device MAC addresses, DHCP addresses, USB identifiers,
 home-network names, and machine-specific paths were moved to the ignored private
 inventory and replaced in public documentation with descriptive placeholders.
 No Wi-Fi password was present in the documentation or added to Git.
 
-The repository is publicly readable. No open-source license has been selected
-yet, so choosing a license remains a later project decision.
+The repository is publicly readable. Luke selected the MIT License on
+2026-07-13 for original project material. Third-party hardware, firmware,
+libraries, and dependencies remain subject to their own terms.
 
 ## Stable 1.2.0 baseline
 

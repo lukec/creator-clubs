@@ -16,3 +16,6 @@ The long-term goal is a portable, dependable creative toolkit that can travel
 from rehearsal to the theatre.
 
 More detailed project notes are in [`docs/`](docs/README.md).
+
+Original work in this repository is available under the [MIT License](LICENSE).
+Third-party hardware, firmware, and dependencies remain under their own terms.
