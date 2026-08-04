@@ -1,0 +1,591 @@
+<div id="club-lighting-lab">
+  <header class="lighting-intro">
+    <div class="lighting-kicker">Flowtoys Creator Club · optical playground</div>
+    <h1>Glow Club Lab</h1>
+    <p>Paint the paired internal sources, tune how the white plastic carries their light, then roll or flip the club to inspect the result.</p>
+  </header>
+
+  <div class="viz-controls">
+    <label class="form-label" for="lighting-model">
+      Model
+      <select class="form-select" id="lighting-model">
+        <option value="hybrid">Reference hybrid</option>
+        <option value="diffusion">Shell diffusion</option>
+        <option value="direct">Direct transmission</option>
+      </select>
+    </label>
+    <label class="form-label" for="lighting-pattern">
+      Pattern preset
+      <select class="form-select" id="lighting-pattern">
+        <option value="reference">Official-photo gradient</option>
+        <option value="handle">One handle pair</option>
+        <option value="body">One body pair</option>
+        <option value="adjacent">Adjacent red + blue</option>
+        <option value="alternating">Alternating red + blue</option>
+        <option value="white">All white</option>
+        <option value="off">LEDs off</option>
+        <option value="custom">Custom DSL</option>
+      </select>
+    </label>
+    <label class="form-label" for="lighting-roll">
+      Roll · long axis <span id="lighting-roll-value">0°</span>
+      <input class="form-range" id="lighting-roll" type="range" min="-180" max="180" step="1" value="0">
+    </label>
+    <label class="form-label" for="lighting-flip">
+      Flip · end over end <span id="lighting-flip-value">−27°</span>
+      <input class="form-range" id="lighting-flip" type="range" min="-180" max="180" step="1" value="-27">
+    </label>
+    <label class="form-label" for="lighting-motion">
+      Preview motion
+      <select class="form-select" id="lighting-motion">
+        <option value="still">Still</option>
+        <option value="roll">Auto roll</option>
+        <option value="flip">Auto flip</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="lighting-stage" id="lighting-stage"></div>
+  <div class="lighting-caption text-small" id="lighting-model-note" aria-live="polite">
+    Handle hotspots remain visible while the wider body blends into a luminous field.
+  </div>
+  <div class="lighting-pose-note text-small text-muted">
+    Roll rotates around the club's own shaft. Flip pivots around the published 28&nbsp;cm balance point.
+  </div>
+
+  <div class="source-strip" id="lighting-source-strip" role="img" aria-label="Sixteen axial stations, each with two opposite-facing RGB sources"></div>
+  <div class="strip-key text-small text-muted">
+    <span>Handle · stations 1–7</span><span>Body · stations 8–16</span>
+  </div>
+
+  <section class="lighting-dsl-card" aria-labelledby="lighting-dsl-heading">
+    <div class="lighting-dsl-heading">
+      <div>
+        <strong id="lighting-dsl-heading">Glow DSL v0</strong>
+        <div class="text-small text-muted">Editable browser source · provisional <code>paired16-v0</code> layout</div>
+      </div>
+      <button class="btn btn-ghost" id="lighting-copy-dsl" type="button">Copy DSL</button>
+    </div>
+    <textarea id="lighting-dsl" spellcheck="false" aria-label="Glow DSL pattern source"></textarea>
+    <div class="lighting-dsl-footer">
+      <button class="btn btn-primary" id="lighting-apply-dsl" type="button">Apply source</button>
+      <span class="text-small" id="lighting-dsl-status" aria-live="polite">Ready</span>
+    </div>
+    <details class="lighting-dsl-help text-small">
+      <summary>DSL quick reference</summary>
+      <p><code>both</code>, <code>side-a</code>, or <code>side-b</code> paints club-local sources. Select <code>all</code>, <code>handle</code>, <code>body</code>, <code>odd</code>, <code>even</code>, a station, or a range such as <code>4..12</code>. Paint a hex color, an exact list, <code>tile(...)</code>, or <code>ramp(#00dfff -&gt; #ff2aa8)</code>. Press <kbd>⌘</kbd><kbd>Enter</kbd> to apply.</p>
+    </details>
+  </section>
+
+  <div class="viz-controls lighting-tuning">
+    <label class="form-label" for="lighting-brightness">
+      Perceived glow <span id="lighting-brightness-value">1.00×</span>
+      <input class="form-range" id="lighting-brightness" type="range" min="0" max="4" step="0.02" value="1">
+    </label>
+    <label class="form-label" for="lighting-handle-diffusion">
+      Handle spread <span id="lighting-handle-value">1.00×</span>
+      <input class="form-range" id="lighting-handle-diffusion" type="range" min="0.35" max="2.4" step="0.05" value="1">
+    </label>
+    <label class="form-label" for="lighting-body-diffusion">
+      Body spread <span id="lighting-body-value">1.00×</span>
+      <input class="form-range" id="lighting-body-diffusion" type="range" min="0.35" max="2.4" step="0.05" value="1">
+    </label>
+    <label class="form-label" for="lighting-exposure">
+      Camera exposure <span id="lighting-exposure-value">1.18×</span>
+      <input class="form-range" id="lighting-exposure" type="range" min="0.35" max="2.5" step="0.01" value="1.18">
+    </label>
+  </div>
+
+  <div class="viz-controls lighting-actions">
+    <label class="form-check form-switch" for="lighting-sources">
+      <input class="form-check-input" id="lighting-sources" type="checkbox">
+      <span class="form-check-label">Cutaway sources</span>
+    </label>
+    <label class="form-check form-switch" for="lighting-inspection">
+      <input class="form-check-input" id="lighting-inspection" type="checkbox">
+      <span class="form-check-label">Inspection light</span>
+    </label>
+    <button class="btn" id="lighting-reset" type="button">Reset</button>
+    <button class="btn btn-primary" id="lighting-copy" type="button">Copy settings</button>
+    <a class="btn btn-ghost" href="https://flowtoys.com/cdn/shop/products/vision-clubs-smooth-body-single-led-glow-juggling-club.jpg?v=1778275800&amp;width=1200" target="_blank" rel="noreferrer">Official reference</a>
+    <a class="btn btn-ghost" href="https://luk.ec/glow/motion/">Sensor Motion Lab</a>
+    <a class="btn btn-ghost" href="https://luk.ec/glow/police/">Police Pattern Lab</a>
+  </div>
+  <div class="text-small text-muted lighting-status" id="lighting-status" aria-live="polite">
+    16 paired stations · 32 SK9822 RGB packages · perceived glow, not measured lumens
+  </div>
+  <details class="lighting-method text-small">
+    <summary>What is measured, sourced, and still a model?</summary>
+    <p><strong>Published construction:</strong> 515 × 82&nbsp;mm Henrys Pirouette-derived shape, translucent PE-blend body, polycarbonate shaft, EVA knob, silicone cap, and 32 controlled RGB packages. Flowtoys markets 96 high-brightness LEDs, consistent with counting three emitting dies per RGB package.</p>
+    <p><strong>Working hypothesis:</strong> the 32 packages are shown as 16 opposite-facing pairs because that matches Luke's physical observation; the exact electrical-to-physical index map is not yet measured. Glow and diffusion are perceptual browser fits—not calibrated lumens, plastic scattering coefficients, or a substitute for a real-club test.</p>
+    <p><a href="https://flowtoys.com/products/vision-club" target="_blank" rel="noreferrer">Official specifications</a> · <a href="https://flowtoys2.freshdesk.com/support/solutions/articles/6000201875-vision-clubs-how-do-flowtoys-clubs-compare-to-henrys-and-play-" target="_blank" rel="noreferrer">Henrys comparison</a> · <a href="https://github.com/lukec/BenTo/blob/master/Firmware/BentoFlow/src/common/config/config_creatorclub.h" target="_blank" rel="noreferrer">Public Creator configuration</a></p>
+  </details>
+</div>
+
+<style>
+  #club-lighting-lab {
+    color: var(--foreground);
+    width: 100%;
+  }
+  #club-lighting-lab .lighting-intro {
+    margin-bottom: 14px;
+  }
+  #club-lighting-lab .lighting-intro h1 {
+    margin: 2px 0 5px;
+    font-size: clamp(1.7rem, 5vw, 2.45rem);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+  }
+  #club-lighting-lab .lighting-intro p {
+    max-width: 68ch;
+    margin: 0;
+    color: var(--muted-foreground);
+  }
+  #club-lighting-lab .lighting-kicker {
+    color: var(--primary);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+  #club-lighting-lab .viz-controls {
+    align-items: end;
+  }
+  #club-lighting-lab .form-label {
+    flex: 1 1 150px;
+    min-width: 140px;
+  }
+  #club-lighting-lab .lighting-stage {
+    width: 100%;
+    height: clamp(390px, 62vw, 540px);
+    margin-top: 10px;
+    overflow: hidden;
+    color: CanvasText;
+    color-scheme: dark;
+    background: Canvas;
+  }
+  #club-lighting-lab .lighting-stage canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  #club-lighting-lab .lighting-caption {
+    min-height: 1.5em;
+    margin-top: 7px;
+  }
+  #club-lighting-lab .lighting-pose-note {
+    margin-top: 2px;
+  }
+  #club-lighting-lab .source-strip {
+    display: grid;
+    grid-template-columns: repeat(16, minmax(10px, 1fr));
+    gap: 3px;
+    align-items: center;
+    margin-top: 8px;
+  }
+  #club-lighting-lab .source-pair {
+    display: grid;
+    gap: 3px;
+    justify-items: center;
+    min-width: 0;
+  }
+  #club-lighting-lab .source-dot {
+    display: block;
+    width: min(13px, 100%);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--muted) 74%, transparent);
+  }
+  #club-lighting-lab .strip-key {
+    display: grid;
+    grid-template-columns: 7fr 9fr;
+    gap: 8px;
+    margin-top: 5px;
+    text-align: center;
+  }
+  #club-lighting-lab .lighting-dsl-card {
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--muted) 42%, transparent);
+  }
+  #club-lighting-lab .lighting-dsl-heading,
+  #club-lighting-lab .lighting-dsl-footer {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #club-lighting-lab .lighting-dsl-card textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 128px;
+    margin: 9px 0;
+    padding: 10px 11px;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--foreground);
+    background: color-mix(in srgb, Canvas 90%, var(--muted));
+    font: 0.78rem/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    tab-size: 2;
+  }
+  #club-lighting-lab .lighting-dsl-card textarea:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  #club-lighting-lab .lighting-dsl-footer {
+    justify-content: flex-start;
+  }
+  #club-lighting-lab .lighting-dsl-help,
+  #club-lighting-lab .lighting-method {
+    margin-top: 10px;
+  }
+  #club-lighting-lab .lighting-dsl-help summary,
+  #club-lighting-lab .lighting-method summary {
+    width: fit-content;
+    cursor: pointer;
+    color: var(--foreground);
+    font-weight: 600;
+  }
+  #club-lighting-lab .lighting-dsl-help p,
+  #club-lighting-lab .lighting-method p {
+    max-width: 78ch;
+    margin: 7px 0 0;
+    color: var(--muted-foreground);
+  }
+  #club-lighting-lab kbd {
+    display: inline-block;
+    min-width: 1.4em;
+    margin-right: 2px;
+    padding: 0 4px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: Canvas;
+    font: inherit;
+    text-align: center;
+  }
+  #club-lighting-lab #lighting-dsl-status.is-error {
+    color: var(--destructive);
+  }
+  #club-lighting-lab .lighting-tuning,
+  #club-lighting-lab .lighting-actions {
+    margin-top: 12px;
+  }
+  #club-lighting-lab .lighting-actions {
+    align-items: center;
+  }
+  #club-lighting-lab .lighting-status {
+    margin-top: 7px;
+    min-height: 1.4em;
+  }
+  #club-lighting-lab .lighting-method {
+    padding-top: 4px;
+    border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  }
+  @media (max-width: 520px) {
+    #club-lighting-lab .lighting-stage {
+      height: 430px;
+    }
+    #club-lighting-lab .form-label {
+      flex-basis: 132px;
+      min-width: 132px;
+    }
+    #club-lighting-lab .source-strip {
+      gap: 2px;
+    }
+    #club-lighting-lab .source-pair {
+      gap: 2px;
+    }
+    #club-lighting-lab .lighting-dsl-heading {
+      align-items: flex-start;
+    }
+    #club-lighting-lab .lighting-dsl-card textarea {
+      min-height: 172px;
+      font-size: 0.72rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #club-lighting-lab .source-dot {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+__CLUB_LIGHTING_LAB_BUNDLE__
+</script>
+
+<script>
+(() => {
+  const root = document.getElementById("club-lighting-lab");
+  const stage = root.querySelector("#lighting-stage");
+  const modelInput = root.querySelector("#lighting-model");
+  const patternInput = root.querySelector("#lighting-pattern");
+  const rollInput = root.querySelector("#lighting-roll");
+  const rollValue = root.querySelector("#lighting-roll-value");
+  const flipInput = root.querySelector("#lighting-flip");
+  const flipValue = root.querySelector("#lighting-flip-value");
+  const motionInput = root.querySelector("#lighting-motion");
+  const dslInput = root.querySelector("#lighting-dsl");
+  const dslStatus = root.querySelector("#lighting-dsl-status");
+  const applyDslButton = root.querySelector("#lighting-apply-dsl");
+  const copyDslButton = root.querySelector("#lighting-copy-dsl");
+  const brightnessInput = root.querySelector("#lighting-brightness");
+  const brightnessValue = root.querySelector("#lighting-brightness-value");
+  const handleInput = root.querySelector("#lighting-handle-diffusion");
+  const handleValue = root.querySelector("#lighting-handle-value");
+  const bodyInput = root.querySelector("#lighting-body-diffusion");
+  const bodyValue = root.querySelector("#lighting-body-value");
+  const exposureInput = root.querySelector("#lighting-exposure");
+  const exposureValue = root.querySelector("#lighting-exposure-value");
+  const sourcesInput = root.querySelector("#lighting-sources");
+  const inspectionInput = root.querySelector("#lighting-inspection");
+  const resetButton = root.querySelector("#lighting-reset");
+  const copyButton = root.querySelector("#lighting-copy");
+  const modelNote = root.querySelector("#lighting-model-note");
+  const status = root.querySelector("#lighting-status");
+  const strip = root.querySelector("#lighting-source-strip");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const dsl = globalThis.CreatorClubLightingLab.dsl;
+
+  const modelNotes = {
+    direct: "Crisp direct transmission exposes the two fixed source faces with very little plastic scatter.",
+    diffusion: "A broad analytic shell kernel smooths each source through the handle and body.",
+    hybrid: "Handle hotspots remain visible while the wider body blends into a luminous field.",
+  };
+
+  const sourceDots = Array.from({ length: 16 }, (_, station) => {
+    const pair = document.createElement("span");
+    pair.className = "source-pair";
+    pair.setAttribute("aria-hidden", "true");
+    const front = document.createElement("span");
+    const back = document.createElement("span");
+    front.className = "source-dot";
+    back.className = "source-dot";
+    pair.append(front, back);
+    strip.append(pair);
+    return [front, back];
+  });
+
+  const lab = globalThis.CreatorClubLightingLab.create({ mount: stage });
+  let currentFrame = dsl.compile(dsl.presets.reference);
+  let currentDocument = dsl.compileDocument(dsl.presets.reference);
+  let animationFrame = 0;
+  let animationStart = 0;
+  let animationStartValue = 0;
+  let dslTimer = 0;
+
+  const paintDot = (dot, color) => {
+    const peak = Math.max(...color);
+    if (peak === 0) {
+      dot.style.removeProperty("background");
+      dot.style.removeProperty("box-shadow");
+      return;
+    }
+    const css = `rgb(${color.join(",")})`;
+    dot.style.background = css;
+    dot.style.boxShadow = `0 0 7px ${css}`;
+  };
+
+  const updateStrip = () => {
+    sourceDots.forEach(([front, back], station) => {
+      paintDot(front, currentFrame[station]);
+      paintDot(back, currentFrame[station + 16]);
+    });
+  };
+
+  const updateParams = () => {
+    const brightness = Number(brightnessInput.value);
+    const handleDiffusion = Number(handleInput.value);
+    const bodyDiffusion = Number(bodyInput.value);
+    const exposure = Number(exposureInput.value);
+    brightnessValue.textContent = `${brightness.toFixed(2)}×`;
+    handleValue.textContent = `${handleDiffusion.toFixed(2)}×`;
+    bodyValue.textContent = `${bodyDiffusion.toFixed(2)}×`;
+    exposureValue.textContent = `${exposure.toFixed(2)}×`;
+    lab.setParams({
+      brightness,
+      handleDiffusion,
+      bodyDiffusion,
+      exposure,
+      inspection: inspectionInput.checked,
+    });
+  };
+
+  const applyDsl = ({ quiet = false } = {}) => {
+    try {
+      currentDocument = dsl.compileDocument(dslInput.value);
+      currentFrame = currentDocument.frame;
+      lab.setFrame(currentFrame);
+      updateStrip();
+      dslStatus.classList.remove("is-error");
+      dslStatus.textContent = `${currentDocument.pattern || "Untitled"} · 32 RGB values ready`;
+      if (!quiet) status.textContent = "Browser preview updated from Glow DSL";
+      return true;
+    } catch (error) {
+      dslStatus.classList.add("is-error");
+      dslStatus.textContent = error.message;
+      return false;
+    }
+  };
+
+  const updatePattern = () => {
+    if (patternInput.value === "custom") return;
+    dslInput.value = dsl.presets[patternInput.value];
+    applyDsl({ quiet: true });
+  };
+
+  const updateModel = () => {
+    lab.setModel(modelInput.value);
+    modelNote.textContent = modelNotes[modelInput.value];
+  };
+
+  const formatDegrees = (value) => `${value < 0 ? "−" : ""}${Math.abs(Math.round(value))}°`;
+
+  const updatePoseLabels = () => {
+    rollValue.textContent = formatDegrees(Number(rollInput.value));
+    flipValue.textContent = formatDegrees(Number(flipInput.value));
+  };
+
+  const stopMotion = () => {
+    cancelAnimationFrame(animationFrame);
+    animationFrame = 0;
+    animationStart = 0;
+  };
+
+  const animatePose = (time) => {
+    if (motionInput.value === "still") return;
+    if (!animationStart) animationStart = time;
+    const unwrapped = animationStartValue + (time - animationStart) * 0.025;
+    const degrees = ((unwrapped + 180) % 360 + 360) % 360 - 180;
+    if (motionInput.value === "roll") {
+      rollInput.value = String(Math.round(degrees));
+      lab.setRoll(degrees);
+    } else {
+      flipInput.value = String(Math.round(degrees));
+      lab.setFlip(degrees);
+    }
+    updatePoseLabels();
+    animationFrame = requestAnimationFrame(animatePose);
+  };
+
+  const startMotion = () => {
+    stopMotion();
+    if (motionInput.value === "still" || reducedMotion) return;
+    animationStartValue = Number(motionInput.value === "roll" ? rollInput.value : flipInput.value);
+    animationFrame = requestAnimationFrame(animatePose);
+  };
+
+  const copyText = async (value) => {
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      const fallback = document.createElement("textarea");
+      fallback.value = value;
+      fallback.setAttribute("readonly", "");
+      root.append(fallback);
+      fallback.select();
+      document.execCommand("copy");
+      fallback.remove();
+    }
+  };
+
+  modelInput.addEventListener("change", updateModel);
+  patternInput.addEventListener("change", updatePattern);
+  rollInput.addEventListener("input", () => {
+    motionInput.value = "still";
+    stopMotion();
+    lab.setRoll(Number(rollInput.value));
+    updatePoseLabels();
+  });
+  flipInput.addEventListener("input", () => {
+    motionInput.value = "still";
+    stopMotion();
+    lab.setFlip(Number(flipInput.value));
+    updatePoseLabels();
+  });
+  motionInput.addEventListener("change", startMotion);
+  dslInput.addEventListener("input", () => {
+    patternInput.value = "custom";
+    window.clearTimeout(dslTimer);
+    dslTimer = window.setTimeout(() => applyDsl({ quiet: true }), 260);
+  });
+  dslInput.addEventListener("keydown", (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      event.preventDefault();
+      window.clearTimeout(dslTimer);
+      applyDsl();
+    }
+  });
+  applyDslButton.addEventListener("click", () => {
+    window.clearTimeout(dslTimer);
+    applyDsl();
+  });
+  copyDslButton.addEventListener("click", async () => {
+    await copyText(dslInput.value);
+    copyDslButton.textContent = "Copied";
+    window.setTimeout(() => { copyDslButton.textContent = "Copy DSL"; }, 1200);
+  });
+  [brightnessInput, handleInput, bodyInput, exposureInput].forEach((input) => {
+    input.addEventListener("input", updateParams);
+  });
+  sourcesInput.addEventListener("change", () => lab.showSources(sourcesInput.checked));
+  inspectionInput.addEventListener("change", updateParams);
+
+  resetButton.addEventListener("click", () => {
+    stopMotion();
+    modelInput.value = "hybrid";
+    patternInput.value = "reference";
+    rollInput.value = "0";
+    flipInput.value = "-27";
+    motionInput.value = "still";
+    brightnessInput.value = "1";
+    handleInput.value = "1";
+    bodyInput.value = "1";
+    exposureInput.value = "1.18";
+    sourcesInput.checked = false;
+    inspectionInput.checked = false;
+    lab.setRoll(0);
+    lab.setFlip(-27);
+    lab.showSources(false);
+    updatePoseLabels();
+    updateModel();
+    updatePattern();
+    updateParams();
+    status.textContent = "Defaults restored · hybrid model · dark venue";
+  });
+
+  copyButton.addEventListener("click", async () => {
+    const state = lab.getState();
+    const summary = [
+      "Club lighting",
+      `model=${state.model}`,
+      `pattern=${currentDocument.pattern || "custom"}`,
+      `glow=${state.params.brightness.toFixed(2)}`,
+      `handle=${state.params.handleDiffusion.toFixed(2)}`,
+      `body=${state.params.bodyDiffusion.toFixed(2)}`,
+      `exposure=${state.params.exposure.toFixed(2)}`,
+      `roll=${Math.round(state.roll)}`,
+      `flip=${Math.round(state.flip)}`,
+      `sources=${state.showSources ? "on" : "off"}`,
+      `light=${state.params.inspection ? "inspection" : "dark"}`,
+    ].join(" ");
+    await copyText(summary);
+    status.textContent = summary;
+    copyButton.textContent = "Copied";
+    window.setTimeout(() => { copyButton.textContent = "Copy settings"; }, 1200);
+  });
+
+  dslInput.value = dsl.presets.reference;
+  updateModel();
+  applyDsl({ quiet: true });
+  updateParams();
+  updatePoseLabels();
+  if (reducedMotion) {
+    motionInput.value = "still";
+    motionInput.disabled = true;
+  }
+})();
+</script>

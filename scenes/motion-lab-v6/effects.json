@@ -1,0 +1,89 @@
+{
+  "version": "6-experimental",
+  "addressBase": 6000,
+  "pages": [
+    {
+      "page": 1,
+      "name": "Roll",
+      "input": "long-axis getRoll()",
+      "effects": [
+        {"effect": 1, "name": "Seamless Cyan/Gold Wheel", "study": "accepted two-color wheel with a smooth wrap seam"},
+        {"effect": 2, "name": "Violet White Rider", "study": "broad white pulse travels handle-to-body and back"},
+        {"effect": 3, "name": "Blue Pink Rider", "study": "accepted moving-pulse grammar in the preferred blue/pink family"},
+        {"effect": 4, "name": "Teal Coral Split", "study": "roll controls a bright, literal spatial boundary"},
+        {"effect": 5, "name": "Diffusion Bands", "study": "four-LED handle groups and eight-LED body groups avoid muddy body blending"},
+        {"effect": 6, "name": "Cyan Indigo Seam", "study": "two-sided fade removes the prior abrupt wrap"},
+        {"effect": 7, "name": "Aurora Ribbon", "study": "continuous cyan-magenta spatial gradient without HSV helpers"},
+        {"effect": 8, "name": "Mirror Portals", "study": "two broad opposed cyan/pink portals"}
+      ]
+    },
+    {
+      "page": 2,
+      "name": "Flip",
+      "input": "end-over-end projectedAngle",
+      "effects": [
+        {"effect": 1, "name": "Upright/Inverted Wash", "study": "upright cyan and inverted gold with the same color at both vertical seams"},
+        {"effect": 2, "name": "Literal White Height", "study": "white pulse reaches the top when upright and bottom when inverted"},
+        {"effect": 3, "name": "Pink Height Ribbon", "study": "physically liked slow-flip ribbon in blue/pink"},
+        {"effect": 4, "name": "Pose Boundary", "study": "upright and inverted become unambiguous full-color endpoints"},
+        {"effect": 5, "name": "Diffusion Flip Bands", "study": "flip-driven broad groups sized separately for handle and body"},
+        {"effect": 6, "name": "Opposed Flip Portals", "study": "retains the successful abstract opposed-point vocabulary"},
+        {"effect": 7, "name": "Reversing Gradient", "study": "a full-axis blue/pink gradient reverses across the inverted pose"},
+        {"effect": 8, "name": "Mirror Kaleidoscope", "study": "broad mirrored bands for graceful slow flips"}
+      ]
+    },
+    {
+      "page": 3,
+      "name": "Energy",
+      "input": "calibrated activity, derived flip speed, and throw state",
+      "effects": [
+        {"effect": 1, "name": "Fast Activity Flame", "study": "faster activity envelope plus a flickering club-body tip"},
+        {"effect": 2, "name": "Stillness Bloom", "study": "gentle breathing bloom grows at rest and tightens with motion"},
+        {"effect": 3, "name": "Full-Range Contrast", "study": "explicit exception: visibly dim at rest and dramatically bright in motion"},
+        {"effect": 4, "name": "Spin Heat", "study": "derived flip speed maps directly from cyan to coral without the broken HSV path"},
+        {"effect": 5, "name": "Direction Lock", "study": "purple dead band prevents idle direction flicker; cyan/pink show direction"},
+        {"effect": 6, "name": "Rest-Stable Sparks", "study": "steady at rest and progressively busier across calibrated activity"},
+        {"effect": 7, "name": "Hand/Air Field", "study": "simple purple-hand/coral-air classification with transition flash"},
+        {"effect": 8, "name": "Throw Class Field", "study": "six whole-club colors expose classifier repeatability"}
+      ]
+    },
+    {
+      "page": 4,
+      "name": "Flight",
+      "input": "throw-state transitions plus angle, roll, and activity",
+      "effects": [
+        {"effect": 1, "name": "Binary Flight Split", "study": "compare a held purple field with a two-zone airborne field"},
+        {"effect": 2, "name": "Release/Catch Signals", "study": "white release flash and cyan catch flash around the hand/air field"},
+        {"effect": 3, "name": "Airborne Tracer", "study": "projected angle moves a broad tracer only while classified airborne"},
+        {"effect": 4, "name": "Frozen Launch Color", "study": "capture orientation at release and hold it during flight"},
+        {"effect": 5, "name": "Class Colors", "study": "repeat the six class colors as a focused diagnostic"},
+        {"effect": 6, "name": "Class Band Signatures", "study": "class selects spatial band width and phase, testing audience legibility"},
+        {"effect": 7, "name": "Flight Energy", "study": "activity changes the airborne palette while held state remains fixed"},
+        {"effect": 8, "name": "Flight Roll Boundary", "study": "roll moves a bright teal/coral boundary only during flight"}
+      ]
+    },
+    {
+      "page": 5,
+      "name": "Police",
+      "input": "time-based police vocabulary shared with the web Motion Lab",
+      "effects": [
+        {"effect": 1, "name": "Full Pursuit", "study": "whole-club red/blue alternation"},
+        {"effect": 2, "name": "Double Tap", "study": "two red hits followed by two blue hits"},
+        {"effect": 3, "name": "Roadblock 50/50", "study": "a red/blue half split swaps once per beat"},
+        {"effect": 4, "name": "Body Alarm", "study": "body and handle answer each other with a white tip accent"},
+        {"effect": 5, "name": "White Scanner", "study": "a broad white scanner moves over a red/blue split"},
+        {"effect": 6, "name": "Braided Bands", "study": "four-LED red/blue blocks advance"},
+        {"effect": 7, "name": "Twin Beacons", "study": "opposed white heads carry red and blue tails"},
+        {"effect": 8, "name": "Three-Zone Dispatch", "study": "red, blue, and white zones rotate"}
+      ]
+    }
+  ],
+  "throwStates": {
+    "0": "none",
+    "1": "flat",
+    "2": "single",
+    "3": "double-plus",
+    "4": "flat-front",
+    "5": "loftie"
+  }
+}

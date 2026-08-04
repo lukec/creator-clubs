@@ -1,6 +1,6 @@
 # BenTo and networking
 
-Last updated: 2026-07-13
+Last updated: 2026-07-16
 
 ## BenTo's role
 
@@ -16,6 +16,35 @@ Installed application:
 Version: 2.1.0b6
 Architecture: Apple Silicon-compatible
 ```
+
+## `.bento` project file format
+
+**Verified from generated and BenTo-saved projects:** a `.bento` file is JSON.
+It is BenTo's serialized application/project object graph, not pixel data and
+not a minimal interchange schema. Current files have top-level objects such as
+`metaData`, `projectSettings`, `models`, `props`, and editor/dashboard state.
+The useful show recipe lives primarily under `models.sequences`:
+
+```text
+sequence
+  -> layers (Audio, Blocks, ...)
+     -> clips with start/length/fades
+        -> active pattern provider, such as /library/patterns/solidColor
+        -> provider parameters, such as brightness, color, speed, or range
+```
+
+Audio is referenced by a file path such as `audio/track.ogg`; it is not embedded
+in the JSON. Saved props may also carry routing, network, and device state, so
+portable generated projects intentionally omit `props.items`. The file also
+contains UI/editor bookkeeping that a headless player does not need.
+
+The repository authors this format directly with Python JSON generators because
+the current subset of sequence, layer, clip, and stock-pattern objects is known.
+For these shows the generator is the editable source of truth and `.bento` is a
+BenTo-compatible generated artifact. This does not imply that every future
+BenTo object is supported: the format is version-tagged application
+serialization, and unsupported provider/effect/filter types must be rejected or
+implemented explicitly by an independent player.
 
 ## Global ID, device `propID`, and saving
 
@@ -49,6 +78,13 @@ ID 0 -> Club B -> CLUB_0_MAC -> current IP CLUB_0_IP
 ID 1 -> Club C -> CLUB_1_MAC -> current IP CLUB_1_IP
 ID 2 -> Club A -> CLUB_2_MAC -> current IP CLUB_2_IP
 ```
+
+The future ClubShow appliance does not embed that mapping in a show package.
+`.clubshow` uses logical roles; `clubshow.local` keeps a private device inventory
+and deployment patch that resolves role to physical device and current endpoint.
+This lets a compatible spare assume a failed club's role without rewriting the
+production. Persistent `propID` remains a BenTo/commissioning setting, not the
+authoritative ClubShow patch key. See `docs/show-box-product.md`.
 
 ## Runtime motion control
 
@@ -143,6 +179,20 @@ Verified on the live stable 1.2.0 club:
   synchronize its component inspector.
 - `POST /uploadFile` stores `.wasm` files under `/scripts` and playback assets
   such as `.colors`, `.meta`, and `.seq` under `/playback`.
+- Stable 1.2.0 accepts `/script/load` with a script basename for a transient
+  launch. Its writable configuration includes `/script/scriptAtLaunch`; saving
+  through the advertised `/settings/saveSettings` trigger provides the stock
+  boot-persistence path. This field is omitted by credential-safe `?config=0`
+  and was verified by extracting only safe script fields from a transient full-
+  config response.
+- Settings-save success must be verified per parameter. Club 2 preserved
+  `scriptAtLaunch=motion-lab`, but global `/leds/strip1/brightness` returned
+  from live `0.9` to default `0.5` after restart even though firmware emitted
+  `Settings saved.` This is a stable-1.2.0 persistence limitation/bug for that
+  parameter, not evidence that every save failed.
+- The full configuration response may include Wi-Fi credentials. Never save,
+  log, paste, or add it to this public repository; prefer `?config=0` except for
+  a narrowly filtered in-memory diagnostic.
 - The LED stream layer receives ArtDMX via the ArtnetWifi library on standard
   Art-Net UDP port 6454. A club maps RGB bytes from its configured universe and
   start channel onto its 32 LEDs.
@@ -158,6 +208,28 @@ Art-Net/UDP :6454         high-rate RGB frames for the LED strip
 HTTP POST :80             upload scripts and pre-rendered playback assets
 ```
 
+### Pre-rendered playback path
+
+BenTo 2.1.0b6 can evaluate a prop's assigned block offline at a configured FPS
+and upload `<name>.meta` plus `<name>.colors`. The Creators configuration writes
+four bytes per LED per frame (alpha, red, green, blue). The firmware loads those
+files from `/playback`, then exposes load, play, pause, seek, stop, looping, and
+synchronized-play commands on `/leds/strip1/playbackLayer`.
+
+This is local LED playback, not a portable copy of the BenTo project: the rich
+timeline is flattened to frames, and audio is not stored or played by the club.
+Once a file is loaded and playing, frame advancement occurs on the club. Button
+launch, playback selection, launch after reboot, multi-club clock drift, and
+physical compatibility with the installed 1.2.0 builds remain untested. BenTo
+and the upload endpoint also accept other playback-related file extensions, but
+the reviewed firmware playback layer directly consumes `.meta` and `.colors`.
+
+The reviewed Creators build enables alpha playback and reserves up to 32 timed
+script slots described by the metadata. Those slots load named WASM scripts as
+playback time crosses their intervals. This is source-backed capability, not a
+validated production option: current physical testing found a script-to-visible
+LED integration gap on installed stable 1.2.0.
+
 OSC itself is an address-plus-typed-values encoding rather than a REST API. A
 message is analogous to calling a named function:
 
@@ -169,6 +241,73 @@ message is analogous to calling a named function:
 
 The OSCQuery JSON is the discoverable schema that explains which OSC addresses
 exist and what type/range each expects.
+
+## Wi-Fi telemetry and script boundary
+
+**Verified observation, 2026-07-14:** the running stable 1.2.0 club's safe
+`GET /?config=0` OSCQuery response includes `/wifi/signal` as a float. Five
+stationary reads returned `0`. The safe response did not expose Wi-Fi
+credentials. The zero value is ambiguous and must not yet be described as dBm,
+percentage quality, or even a live measurement.
+
+**Verified binary boundary:** inspection of the exact installed stable 1.2.0
+firmware import names found motion, button, battery, LED, FX, time, random, and
+noise functions, but no Wi-Fi signal or connection-state getter for a WASM
+program. The same binary contains `RSSI :` diagnostic text, so the native
+firmware knows about RSSI even though it does not currently grant scripts read
+access to it.
+
+**Source-backed host bridge, rejected by installed binary:** the reviewed Bentuino source recognizes an
+optional WASM export named `setParam(index: i32, value: f32)`. Its script
+component accepts the two-argument command `setScriptParam` and forwards the
+values to that export. The installed factory stable 1.2.0 loader found the
+export, but `/script/setScriptParam` returned `Param not found` and
+`Command was not handled`. This host bridge is therefore unavailable on the
+current clubs despite existing in the source snapshot. The source implementation checks `stopFunc` before calling the parameter function
+rather than checking `setScriptParamFunc`, so prototype scripts should export
+both `stop` and `setParam` if a future firmware exposes the command.
+
+This permits a no-flash diagnostic architecture: a Mac helper polls
+`/wifi/signal`, optionally measures request latency and loss, and pushes a
+normalized value plus heartbeat into a local LED script. A timeout in the
+script can display loss after packets stop arriving. A truly self-contained
+club requires new read-only WASM imports backed by `WiFi.RSSI()` and the
+firmware's existing connection-state enum.
+
+### UniFi-observed telemetry option
+
+On the home network, the Mac can instead act as a bridge between UniFi and the
+club:
+
+```text
+UniFi AP/controller -> read-only local API -> Mac mapper
+                    -> future parameter bridge -> local club renderer
+```
+
+This has a useful observational advantage: UniFi is the infrastructure endpoint
+of the radio connection, rather than asking the club to describe itself. It can
+also correlate association state with the serving AP/radio and any available
+retry, rate, signal, or experience measurements.
+
+The supported surface is version-dependent. Ubiquiti's current official
+guidance says that local Network API documentation is exposed inside **Network
+> Integrations** for the installed version. The current public connected-client
+schema guarantees client identity, address, connection type, connected time,
+and uplink device, but does not guarantee per-client RSSI. Inspect the local
+schema and one redacted club response before designing a metric mapping. Treat
+dashboard-private endpoints as a brittle fallback, not the default API.
+
+Use a dedicated read-only/least-privilege API key. Store it outside Git in the
+macOS Keychain or an ignored `private/` environment file; never put it in a
+command line recorded in documentation, a generated show, logs, or OSC
+messages. Keep the exact MAC-to-club-ID mapping private as already required by
+this repository. The visualization should retain a local heartbeat timeout so
+controller/API/helper failure becomes visible rather than freezing the last
+healthy color.
+
+This path will not transfer unchanged to the proposed TP-Link Archer portable
+network. There it must fall back to direct reachability/club telemetry or a
+router-independent firmware getter.
 
 ## Network security boundary
 
@@ -256,6 +395,18 @@ Archer WAN: disconnected
 Mac Internet Sharing/routing: disabled
 ```
 
+For a literal-field or simple-theatre rig, prefer the Mac on an Archer LAN port
+through a USB-C Ethernet adapter and keep only the clubs on 2.4 GHz. This
+removes the Mac's Wi-Fi radio from the high-rate club path. If a theatre also
+provides a show-control LAN, use a second interface and do not bridge or route
+it to the Archer.
+
+TP-Link's official V3 specification rates the Archer supply at `12 V DC, 5 A`;
+some earlier regional variants list `12 V, 3.3 A`. Verify the physical router
+and adapter labels before choosing field power. Use the stock adapter from AC
+or a portable AC power station for the first tests, then measure actual draw.
+The adapter rating is not measured consumption.
+
 Configuration requirements:
 
 - factory-reset the unused router before configuration so stale settings do
@@ -288,6 +439,9 @@ Safe migration sequence, after Luke explicitly starts the change:
    change.
 5. Only after the canary passes, migrate Clubs 1 and 2 one at a time.
 6. Re-run the three-simultaneous-prop and power-cycle checks.
+
+The complete field kit, per-performance startup, failure recovery, and theatre
+network boundary are in `docs/performance-deployment.md`.
 
 ## Firmware uploader limitations found in practice
 

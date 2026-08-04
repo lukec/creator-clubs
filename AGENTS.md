@@ -3,6 +3,9 @@
 This workspace is the durable engineering record for the Flowtoys Creators Club
 project.
 
+Use the repo-local `$control-bento` skill for creating, editing, validating,
+loading, assigning, previewing, or stopping `.bento` shows through BenTo.
+
 After every investigation, experiment, design discussion, implementation, or
 decision, update the relevant files under `docs/` in the same working session.
 Do not leave important knowledge only in chat history.

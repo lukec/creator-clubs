@@ -1,0 +1,463 @@
+<div id="police-pattern-lab">
+  <div class="viz-controls">
+    <label class="form-label" for="police-speed">
+      Speed <span id="police-speed-value">1.0×</span>
+      <input class="form-range" id="police-speed" type="range" min="0.5" max="2" step="0.1" value="1">
+    </label>
+    <button class="btn btn-primary" id="police-play" type="button" aria-pressed="false">
+      <i data-lucide="pause" aria-hidden="true"></i>
+      <span>Pause</span>
+    </button>
+    <button class="btn" id="police-copy" type="button">
+      <i data-lucide="copy" aria-hidden="true"></i>
+      <span>Copy picks</span>
+    </button>
+  </div>
+  <div class="selection-line" id="police-selection" aria-live="polite">Picks: none</div>
+  <div class="pattern-list" id="police-patterns"></div>
+  <div class="juggle-preview" id="police-juggle-preview" hidden>
+    <div class="viz-row">
+      <span id="police-juggle-label">Juggling preview</span>
+      <button class="btn btn-ghost" id="police-juggle-close" type="button">Close</button>
+    </div>
+    <div class="juggle-stage" id="police-juggle-stage"></div>
+    <div class="text-small text-muted">Fixed audience camera · one pattern cloned across all three clubs</div>
+  </div>
+  <div class="strip-key text-small text-muted">
+    <span>Handle LEDs 1–16</span><span>Body LEDs 17–32</span>
+  </div>
+</div>
+
+<style>
+  #police-pattern-lab {
+    color: var(--foreground);
+    width: 100%;
+  }
+  #police-pattern-lab .viz-controls {
+    align-items: end;
+  }
+  #police-pattern-lab .form-label {
+    min-width: 180px;
+  }
+  #police-pattern-lab .selection-line {
+    margin: 10px 0 6px;
+    min-height: 1.5em;
+  }
+  #police-pattern-lab .pattern-row {
+    display: grid;
+    grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 54px;
+  }
+  #police-pattern-lab .pattern-label,
+  #police-pattern-lab .pattern-actions {
+    min-width: 0;
+  }
+  #police-pattern-lab .pattern-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  #police-pattern-lab .pattern-description {
+    display: block;
+    margin-top: 2px;
+  }
+  #police-pattern-lab .led-strip {
+    display: grid;
+    grid-template-columns: repeat(32, minmax(3px, 1fr));
+    gap: 2px;
+    align-items: center;
+    padding: 7px;
+    background: color-mix(in srgb, var(--muted) 72%, transparent);
+    border-radius: 999px;
+    contain: layout paint;
+  }
+  #police-pattern-lab .led {
+    min-width: 3px;
+    height: 24px;
+    border-radius: 999px;
+    box-shadow:
+      0 0 0 var(--emission-ring, 0) currentColor,
+      inset 0 1px 0 rgb(255 255 255 / 52%),
+      inset 0 -1px 0 rgb(0 0 0 / 18%);
+  }
+  #police-pattern-lab .led.body-start {
+    margin-left: 4px;
+  }
+  #police-pattern-lab .juggle-preview {
+    padding: 12px 0 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  #police-pattern-lab .juggle-preview .viz-row {
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  #police-pattern-lab .juggle-stage {
+    width: 100%;
+    height: clamp(250px, 52vw, 380px);
+    overflow: hidden;
+    color: CanvasText;
+    color-scheme: dark;
+    background: Canvas;
+  }
+  #police-pattern-lab .juggle-stage canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  #police-pattern-lab .strip-key {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 8px 7px 0 min(202px, 27vw);
+    text-align: center;
+  }
+  @media (max-width: 560px) {
+    #police-pattern-lab .pattern-row {
+      grid-template-columns: 1fr;
+      gap: 7px;
+    }
+    #police-pattern-lab .led {
+      height: 20px;
+    }
+    #police-pattern-lab .juggle-stage {
+      height: 300px;
+    }
+    #police-pattern-lab .strip-key {
+      margin-left: 7px;
+    }
+  }
+</style>
+
+<script>
+__CREATOR_CLUB_3D_BUNDLE__
+</script>
+
+<script>
+(() => {
+  const root = document.getElementById("police-pattern-lab");
+  const list = root.querySelector("#police-patterns");
+  const speedInput = root.querySelector("#police-speed");
+  const speedValue = root.querySelector("#police-speed-value");
+  const playButton = root.querySelector("#police-play");
+  const playLabel = playButton.querySelector("span");
+  const playIcon = playButton.querySelector("i");
+  const copyButton = root.querySelector("#police-copy");
+  const copyLabel = copyButton.querySelector("span");
+  const selection = root.querySelector("#police-selection");
+  const previewHost = root.querySelector("#police-juggle-preview");
+  const previewStage = root.querySelector("#police-juggle-stage");
+  const previewLabel = root.querySelector("#police-juggle-label");
+  const previewClose = root.querySelector("#police-juggle-close");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const RED = [255, 18, 48];
+  const BLUE = [18, 92, 255];
+  const WHITE = [255, 255, 255];
+  const LEDS = 32;
+  const FRAME_INTERVAL = 1000 / 30;
+
+  const circularDistance = (a, b) => {
+    const direct = Math.abs(a - b);
+    return Math.min(direct, LEDS - direct);
+  };
+  const color = (rgb, brightness = 1) => rgb.map((value) => Math.round(value * brightness));
+  const ledStyleCache = new Map();
+  const srgbToLinear = (channel) => {
+    const value = channel / 255;
+    return value <= 0.04045
+      ? value / 12.92
+      : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  const ledStyleFor = (red, green, blue) => {
+    const key = `${red},${green},${blue}`;
+    if (!ledStyleCache.has(key)) {
+      const gain = window.CreatorClub3D.chromaEmissionGain(
+        [red, green, blue].map(srgbToLinear),
+      );
+      ledStyleCache.set(key, {
+        color: `rgb(${red} ${green} ${blue})`,
+        ring: `${Math.min(2, Math.max(0, Math.round((gain - 1) * 0.35)))}px`,
+      });
+    }
+    return ledStyleCache.get(key);
+  };
+
+  const patterns = [
+    {
+      name: "Full pursuit",
+      description: "Whole-club red/blue alternation",
+      render: (index, time) => color(Math.floor(time / 0.32) % 2 === 0 ? RED : BLUE),
+    },
+    {
+      name: "Double tap",
+      description: "Two red hits, then two blue hits",
+      render: (index, time) => {
+        const step = Math.floor(time / 0.18) % 4;
+        const base = step < 2 ? RED : BLUE;
+        return color(base, step % 2 === 0 ? 1 : 0.72);
+      },
+    },
+    {
+      name: "Roadblock 50/50",
+      description: "Accepted split swaps once per beat",
+      render: (index, time) => {
+        const swap = Math.floor(time / 0.64) % 2;
+        return index < 16 ? (swap ? BLUE : RED) : (swap ? RED : BLUE);
+      },
+    },
+    {
+      name: "Body alarm",
+      description: "Large body leads; handle answers",
+      render: (index, time) => {
+        const swap = Math.floor(time / 0.32) % 2;
+        const body = swap ? RED : BLUE;
+        const handle = swap ? BLUE : RED;
+        if (index === 31 && Math.floor(time / 0.16) % 2 === 0) return WHITE;
+        return index < 16 ? color(handle, 0.76) : body;
+      },
+    },
+    {
+      name: "White scanner",
+      description: "Broad white scan over a police split",
+      render: (index, time) => {
+        const cycle = (time % 2.4) / 2.4;
+        const head = Math.round((cycle < 0.5 ? cycle * 2 : 2 - cycle * 2) * 31);
+        const distance = Math.abs(index - head);
+        if (distance <= 1) return WHITE;
+        if (distance <= 3) return color(WHITE, 0.72);
+        return index < 16 ? BLUE : RED;
+      },
+    },
+    {
+      name: "Braided bands",
+      description: "Four-LED red/blue blocks advance",
+      render: (index, time) => {
+        const shift = Math.floor(time / 0.18) % 8;
+        return Math.floor((index + shift) / 4) % 2 === 0 ? RED : BLUE;
+      },
+    },
+    {
+      name: "Twin beacons",
+      description: "Opposed white heads with colored tails",
+      render: (index, time) => {
+        const headA = Math.floor((time * 7) % LEDS);
+        const headB = (headA + 16) % LEDS;
+        const distanceA = circularDistance(index, headA);
+        const distanceB = circularDistance(index, headB);
+        if (distanceA <= 1 || distanceB <= 1) return WHITE;
+        if (distanceA <= 4) return RED;
+        if (distanceB <= 4) return BLUE;
+        return index < 16 ? color(BLUE, 0.72) : color(RED, 0.72);
+      },
+    },
+    {
+      name: "Three-zone dispatch",
+      description: "Red, blue, and white zones rotate",
+      render: (index, time) => {
+        const shift = Math.floor(time / 0.64) % 3;
+        const zone = Math.min(2, Math.floor(index / 11));
+        return [BLUE, RED, WHITE][(zone + shift) % 3];
+      },
+    },
+  ];
+
+  const rows = patterns.map((pattern, patternIndex) => {
+    const row = document.createElement("div");
+    row.className = "pattern-row";
+
+    const label = document.createElement("div");
+    label.className = "pattern-label";
+    const actions = document.createElement("div");
+    actions.className = "pattern-actions";
+    const checkWrap = document.createElement("div");
+    checkWrap.className = "form-check";
+    const checkbox = document.createElement("input");
+    checkbox.className = "form-check-input";
+    checkbox.type = "checkbox";
+    checkbox.id = `police-pattern-${patternIndex + 1}`;
+    checkbox.dataset.pattern = String(patternIndex + 1);
+    const checkLabel = document.createElement("label");
+    checkLabel.className = "form-check-label";
+    checkLabel.htmlFor = checkbox.id;
+    checkLabel.textContent = `${patternIndex + 1}. ${pattern.name}`;
+    checkWrap.append(checkbox, checkLabel);
+    const juggleButton = document.createElement("button");
+    juggleButton.className = "btn btn-ghost";
+    juggleButton.type = "button";
+    juggleButton.textContent = "Juggle";
+    juggleButton.setAttribute("aria-pressed", "false");
+    juggleButton.setAttribute("aria-label", `Juggle ${pattern.name}`);
+    actions.append(checkWrap, juggleButton);
+    const description = document.createElement("span");
+    description.className = "pattern-description text-small text-muted";
+    description.textContent = pattern.description;
+    label.append(actions, description);
+
+    const strip = document.createElement("div");
+    strip.className = "led-strip";
+    strip.setAttribute("role", "img");
+    strip.setAttribute("aria-label", `${pattern.name}: ${pattern.description}, animated across 32 LEDs`);
+    const leds = Array.from({ length: LEDS }, (_, ledIndex) => {
+      const led = document.createElement("span");
+      led.className = `led${ledIndex === 16 ? " body-start" : ""}`;
+      led.setAttribute("aria-hidden", "true");
+      strip.append(led);
+      return led;
+    });
+    row.append(label, strip);
+    list.append(row);
+    return {
+      ...pattern,
+      row,
+      checkbox,
+      juggleButton,
+      leds,
+      frame: Array.from({ length: LEDS }, () => [0, 0, 0]),
+      lastRgb: Array.from({ length: LEDS }, () => ""),
+    };
+  });
+
+  let speed = Number(speedInput.value);
+  let paused = reducedMotion;
+  let animationTime = 0.78;
+  let previousTimestamp = null;
+  let previousRenderTimestamp = -Infinity;
+  let selectedPreview = null;
+  let clubPreview = null;
+  let previewFailed = false;
+
+  const ensurePreview = () => {
+    if (previewFailed) return null;
+    if (!clubPreview) {
+      try {
+        clubPreview = window.CreatorClub3D.createCreatorClubPreview({
+          mount: previewStage,
+          ariaLabel: "Three illuminated Creator Clubs juggling the selected police pattern",
+        });
+      } catch (error) {
+        previewFailed = true;
+        previewStage.textContent = `3D preview unavailable: ${error.message}`;
+        rows.forEach((row) => { row.juggleButton.disabled = true; });
+        return null;
+      }
+    }
+    return clubPreview;
+  };
+
+  const updatePicks = () => {
+    const picks = rows
+      .map((row, index) => row.checkbox.checked ? String(index + 1) : null)
+      .filter(Boolean);
+    selection.textContent = `Picks: ${picks.length ? picks.join(", ") : "none"}`;
+  };
+
+  const closePreview = () => {
+    if (selectedPreview !== null) rows[selectedPreview].juggleButton.setAttribute("aria-pressed", "false");
+    selectedPreview = null;
+    previewHost.hidden = true;
+  };
+
+  const openPreview = (patternIndex) => {
+    if (selectedPreview === patternIndex && !previewHost.hidden) {
+      closePreview();
+      return;
+    }
+    rows.forEach((row, index) => row.juggleButton.setAttribute("aria-pressed", String(index === patternIndex)));
+    selectedPreview = patternIndex;
+    previewLabel.textContent = `${patternIndex + 1}. ${rows[patternIndex].name} · juggling preview`;
+    rows[patternIndex].row.after(previewHost);
+    previewHost.hidden = false;
+    ensurePreview()?.render(reducedMotion ? 0.78 : animationTime, rows[patternIndex].frame);
+  };
+
+  const render = () => {
+    rows.forEach((pattern) => {
+      pattern.leds.forEach((led, ledIndex) => {
+        const [red, green, blue] = pattern.render(ledIndex, animationTime);
+        const frameColor = pattern.frame[ledIndex];
+        frameColor[0] = red;
+        frameColor[1] = green;
+        frameColor[2] = blue;
+        const key = `${red},${green},${blue}`;
+        if (pattern.lastRgb[ledIndex] !== key) {
+          pattern.lastRgb[ledIndex] = key;
+          const style = ledStyleFor(red, green, blue);
+          led.style.backgroundColor = style.color;
+          led.style.color = style.color;
+          led.style.setProperty("--emission-ring", style.ring);
+        }
+      });
+    });
+    if (selectedPreview !== null && !previewHost.hidden) {
+      ensurePreview()?.render(reducedMotion ? 0.78 : animationTime, rows[selectedPreview].frame);
+    }
+  };
+
+  const animate = (timestamp) => {
+    if (previousTimestamp === null) previousTimestamp = timestamp;
+    const elapsed = Math.min(0.05, (timestamp - previousTimestamp) / 1000);
+    previousTimestamp = timestamp;
+    if (!paused) {
+      animationTime += elapsed * speed;
+      if (timestamp - previousRenderTimestamp >= FRAME_INTERVAL) {
+        previousRenderTimestamp = timestamp;
+        render();
+      }
+    }
+    window.requestAnimationFrame(animate);
+  };
+
+  speedInput.addEventListener("input", () => {
+    speed = Number(speedInput.value);
+    speedValue.textContent = `${speed.toFixed(1)}×`;
+  });
+  playButton.addEventListener("click", () => {
+    paused = !paused;
+    previousTimestamp = null;
+    previousRenderTimestamp = -Infinity;
+    playButton.setAttribute("aria-pressed", String(paused));
+    playLabel.textContent = paused ? "Play" : "Pause";
+    playIcon.setAttribute("data-lucide", paused ? "play" : "pause");
+    if (window.lucide) window.lucide.createIcons({ attrs: { width: 16, height: 16 } });
+  });
+  rows.forEach((row, index) => {
+    row.checkbox.addEventListener("change", updatePicks);
+    row.juggleButton.addEventListener("click", () => openPreview(index));
+  });
+  previewClose.addEventListener("click", closePreview);
+  copyButton.addEventListener("click", async () => {
+    const text = selection.textContent.replace("Picks:", "Police picks:");
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const input = document.createElement("textarea");
+      input.value = text;
+      input.setAttribute("readonly", "");
+      input.style.position = "absolute";
+      input.style.left = "-9999px";
+      root.append(input);
+      input.select();
+      document.execCommand("copy");
+      input.remove();
+    }
+    copyLabel.textContent = "Copied";
+    window.setTimeout(() => { copyLabel.textContent = "Copy picks"; }, 1200);
+  });
+
+  if (paused) {
+    playButton.setAttribute("aria-pressed", "true");
+    playLabel.textContent = "Play";
+    playIcon.setAttribute("data-lucide", "play");
+  }
+  render();
+  updatePicks();
+  window.requestAnimationFrame(animate);
+})();
+</script>

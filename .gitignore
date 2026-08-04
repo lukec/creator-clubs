@@ -2,7 +2,17 @@
 /artifacts/
 /backups/
 /private/
+/output/
 /notes.md
+
+# Personal show projects, licensed media, and local BenTo snapshots live in
+# the separate private repository. Reusable calibration shows may remain here.
+/shows/exit-the-premises-full/
+/shows/exit-the-premises-poc/
+/shows/gettosinfonia/
+/shows/heartaches/
+/shows/kojo-no-tsuki/
+/shows/papa-was-stoned/
 
 # Firmware/build products
 *.bin
@@ -22,4 +32,13 @@
 .DS_Store
 .idea/
 .vscode/
+__pycache__/
+*.py[cod]
 *.log
+*_autosave/
+node_modules/
+/tools/web-sim/dist/
+
+# Copyrighted rehearsal audio: keep the project/generator public, not the media
+/shows/*/audio/*
+!/shows/*/audio/README.md

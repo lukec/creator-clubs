@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A friendly overview of what Luke and Yuki have learned with their programmable Creator Clubs.">
+  <title>Creator Clubs — What We’ve Learned</title>
+  <style>
+    :root {
+      --ink: #f6f3ff;
+      --muted: #bcb5cc;
+      --night: #0b0811;
+      --panel: rgba(28, 22, 38, 0.82);
+      --panel-solid: #1b1624;
+      --line: rgba(255, 255, 255, 0.12);
+      --coral: #ff4d62;
+      --gold: #ffd84d;
+      --cyan: #56f3e4;
+      --violet: #9e6cff;
+      --pink: #ff62ca;
+      --green: #71f68c;
+      --radius: 24px;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 3%, rgba(158, 108, 255, 0.16), transparent 26rem),
+        radial-gradient(circle at 86% 22%, rgba(86, 243, 228, 0.10), transparent 30rem),
+        radial-gradient(circle at 55% 90%, rgba(255, 77, 98, 0.10), transparent 28rem),
+        var(--night);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; }
+    button { font: inherit; }
+    .wrap { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--line);
+      background: rgba(11, 8, 17, 0.82);
+      backdrop-filter: blur(18px);
+    }
+    .topbar .wrap {
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .brand-mark {
+      width: 14px;
+      height: 38px;
+      border-radius: 999px 999px 40% 40%;
+      background: linear-gradient(180deg, var(--cyan), var(--violet) 45%, var(--coral));
+      box-shadow: 0 0 20px rgba(86, 243, 228, 0.55);
+      transform: rotate(18deg);
+    }
+    .topnav { display: flex; align-items: center; gap: 22px; }
+    .topnav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 650;
+    }
+    .topnav a:hover, .topnav a:focus-visible { color: var(--ink); }
+
+    .hero {
+      min-height: 690px;
+      padding: 90px 0 76px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+      align-items: center;
+      gap: 70px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 20px;
+      color: var(--cyan);
+      font-size: 0.78rem;
+      font-weight: 850;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 24px;
+      height: 2px;
+      border-radius: 9px;
+      background: currentColor;
+    }
+    h1, h2, h3 { margin: 0; line-height: 1.08; letter-spacing: -0.045em; }
+    h1 { max-width: 780px; font-size: clamp(3.5rem, 7.4vw, 6.8rem); }
+    h1 .gradient {
+      background: linear-gradient(100deg, var(--coral), var(--gold) 32%, var(--cyan) 67%, var(--violet));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero-copy > p {
+      max-width: 670px;
+      margin: 28px 0 30px;
+      color: #d0c9da;
+      font-size: clamp(1.1rem, 1.6vw, 1.32rem);
+    }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 20px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--ink);
+      font-weight: 780;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .button.primary {
+      border-color: transparent;
+      background: var(--ink);
+      color: #15101c;
+    }
+    .button:hover, .button:focus-visible { transform: translateY(-2px); }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #d8d2e2;
+      background: rgba(255, 255, 255, 0.035);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .pill::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(113, 246, 140, 0.8);
+    }
+
+    .club-stage {
+      position: relative;
+      min-height: 510px;
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+    }
+    .club-stage::before,
+    .club-stage::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      z-index: -2;
+    }
+    .club-stage::before {
+      width: 420px;
+      height: 420px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: radial-gradient(circle, rgba(158, 108, 255, 0.12), transparent 65%);
+      box-shadow: inset 0 0 80px rgba(86, 243, 228, 0.05);
+    }
+    .club-stage::after {
+      width: 250px;
+      height: 250px;
+      border: 1px dashed rgba(255, 255, 255, 0.14);
+      animation: orbit 24s linear infinite;
+    }
+    .club {
+      position: absolute;
+      width: 42px;
+      height: 340px;
+      border-radius: 50% 50% 28% 28% / 12% 12% 7% 7%;
+      transform-origin: 50% 70%;
+      border: 1px solid rgba(255,255,255,0.24);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.36), transparent 20%, transparent 76%, rgba(255,255,255,0.15)),
+        linear-gradient(180deg, var(--club-a), var(--club-b) 42%, var(--club-c) 68%, #16101f 69%, #2a2037 100%);
+      box-shadow: 0 0 34px var(--glow), inset 0 0 14px rgba(255,255,255,0.34);
+    }
+    .club::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -20px;
+      width: 24px;
+      height: 24px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: var(--club-a);
+      box-shadow: 0 0 22px var(--glow);
+    }
+    .club::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -16px;
+      width: 56px;
+      height: 24px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: #19121f;
+    }
+    .club.one {
+      --club-a: #56f3e4; --club-b: #8f5cff; --club-c: #ff4d62; --glow: rgba(86, 243, 228, 0.48);
+      transform: translate(-112px, 16px) rotate(-27deg);
+      animation: float-one 5.8s ease-in-out infinite;
+    }
+    .club.two {
+      --club-a: #ffd84d; --club-b: #ff5da7; --club-c: #9e6cff; --glow: rgba(255, 98, 202, 0.46);
+      transform: translate(0, -30px) rotate(2deg);
+      animation: float-two 6.4s ease-in-out infinite;
+    }
+    .club.three {
+      --club-a: #9e6cff; --club-b: #56f3e4; --club-c: #ffd84d; --glow: rgba(158, 108, 255, 0.48);
+      transform: translate(116px, 18px) rotate(28deg);
+      animation: float-three 5.4s ease-in-out infinite;
+    }
+    .stage-note {
+      position: absolute;
+      right: 10px;
+      bottom: 22px;
+      max-width: 210px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--muted);
+      background: rgba(11, 8, 17, 0.78);
+      font-size: 0.8rem;
+      box-shadow: var(--shadow);
+    }
+    .stage-note strong { display: block; color: var(--ink); }
+
+    section { padding: 88px 0; }
+    .section-head {
+      display: grid;
+      grid-template-columns: 0.65fr 1.35fr;
+      gap: 60px;
+      align-items: end;
+      margin-bottom: 44px;
+    }
+    .section-head h2 { max-width: 720px; font-size: clamp(2.4rem, 4.8vw, 4.5rem); }
+    .section-head p { max-width: 640px; margin: 0; color: var(--muted); font-size: 1.08rem; }
+
+    .summary-grid,
+    .proof-grid,
+    .lesson-grid,
+    .show-grid,
+    .question-grid {
+      display: grid;
+      gap: 16px;
+    }
+    .summary-grid { grid-template-columns: repeat(3, 1fr); }
+    .proof-grid { grid-template-columns: repeat(3, 1fr); }
+    .lesson-grid { grid-template-columns: repeat(2, 1fr); }
+    .show-grid { grid-template-columns: repeat(3, 1fr); }
+    .question-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .card {
+      position: relative;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(150deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018));
+      box-shadow: 0 18px 60px rgba(0,0,0,0.18);
+      overflow: hidden;
+    }
+    .card::after {
+      content: "";
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      right: -45px;
+      top: -45px;
+      border-radius: 50%;
+      background: var(--card-glow, rgba(158,108,255,0.15));
+      filter: blur(4px);
+    }
+    .card .num {
+      display: block;
+      margin-bottom: 38px;
+      color: var(--accent, var(--cyan));
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+    }
+    .card h3 { margin-bottom: 12px; font-size: 1.45rem; letter-spacing: -0.025em; }
+    .card p { margin: 0; color: var(--muted); }
+    .card strong { color: var(--ink); }
+
+    .architecture {
+      padding: 44px;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      background:
+        radial-gradient(circle at 20% 0, rgba(86,243,228,0.09), transparent 30rem),
+        radial-gradient(circle at 100% 100%, rgba(255,98,202,0.09), transparent 28rem),
+        var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .arch-grid { display: grid; grid-template-columns: 1fr 90px 1fr; align-items: stretch; gap: 20px; }
+    .arch-card {
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(8, 6, 12, 0.42);
+    }
+    .arch-card .arch-label {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: var(--cyan);
+      font-size: 0.75rem;
+      font-weight: 900;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .arch-card:nth-child(3) .arch-label { color: var(--pink); }
+    .arch-card h3 { font-size: 1.8rem; }
+    .arch-card > p { color: var(--muted); }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 26px;
+    }
+    .flow span {
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      font-size: 0.82rem;
+      font-weight: 750;
+    }
+    .flow i { color: var(--muted); font-style: normal; }
+    .plus {
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-size: 3rem;
+      font-weight: 250;
+    }
+    .hybrid {
+      max-width: 780px;
+      margin: 28px auto 0;
+      padding: 18px 24px;
+      border: 1px solid rgba(255, 216, 77, 0.30);
+      border-radius: 18px;
+      text-align: center;
+      color: #e8e1ee;
+      background: rgba(255, 216, 77, 0.055);
+    }
+    .hybrid strong { color: var(--gold); }
+
+    .timeline { position: relative; margin-top: 18px; }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 21px;
+      top: 18px;
+      bottom: 18px;
+      width: 2px;
+      background: linear-gradient(var(--cyan), var(--violet), var(--coral));
+    }
+    .milestone {
+      position: relative;
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 22px;
+      padding: 0 0 34px;
+    }
+    .milestone:last-child { padding-bottom: 0; }
+    .dot {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--panel-solid);
+      color: var(--cyan);
+      font-weight: 900;
+      z-index: 1;
+    }
+    .milestone:nth-child(3n+2) .dot { color: var(--violet); }
+    .milestone:nth-child(3n) .dot { color: var(--coral); }
+    .milestone h3 { margin: 4px 0 7px; font-size: 1.25rem; }
+    .milestone p { max-width: 760px; margin: 0; color: var(--muted); }
+
+    .lesson {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .lesson-icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: var(--icon-bg, rgba(86,243,228,0.1));
+      color: var(--icon-color, var(--cyan));
+      font-size: 1.35rem;
+      font-weight: 900;
+    }
+    .lesson h3 { margin: 3px 0 8px; font-size: 1.23rem; }
+    .lesson p { margin: 0; color: var(--muted); }
+
+    .show-card { min-height: 236px; display: flex; flex-direction: column; justify-content: space-between; }
+    .show-card .tag {
+      display: inline-block;
+      align-self: flex-start;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .show-card h3 { margin: 20px 0 9px; }
+    .show-card p { margin: 0; color: var(--muted); }
+    .show-card .energy {
+      height: 7px;
+      margin-top: 22px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .show-card .energy span {
+      display: block;
+      width: var(--energy, 70%);
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--cyan), var(--violet), var(--coral));
+    }
+
+    .conversation {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 44px;
+      padding: 46px;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      background: linear-gradient(145deg, rgba(158,108,255,0.13), rgba(255,77,98,0.06));
+    }
+    .conversation h2 { font-size: clamp(2.4rem, 4.5vw, 4rem); }
+    .conversation > div > p { color: var(--muted); }
+    .question {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(10,7,14,0.42);
+    }
+    .question span { color: var(--gold); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.12em; }
+    .question p { margin: 8px 0 0; color: var(--ink); font-weight: 730; }
+
+    .demo-list { counter-reset: demo; display: grid; gap: 12px; margin: 28px 0 0; padding: 0; list-style: none; }
+    .demo-list li {
+      counter-increment: demo;
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 15px 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+    }
+    .demo-list li::before {
+      content: counter(demo, decimal-leading-zero);
+      color: var(--cyan);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+    }
+    .demo-list strong { display: block; }
+    .demo-list small { display: block; color: var(--muted); }
+
+    details {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.025);
+    }
+    summary {
+      padding: 17px 20px;
+      cursor: pointer;
+      color: #ddd6e8;
+      font-weight: 780;
+    }
+    details p, details ul { margin: 0; padding: 0 20px 20px; color: var(--muted); }
+    details ul { padding-left: 40px; }
+
+    footer {
+      padding: 42px 0 60px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+    }
+    footer .wrap { display: flex; justify-content: space-between; gap: 24px; }
+    footer strong { color: var(--ink); }
+
+    @keyframes orbit { to { transform: rotate(360deg); } }
+    @keyframes float-one {
+      0%, 100% { transform: translate(-112px, 16px) rotate(-27deg); }
+      50% { transform: translate(-105px, -4px) rotate(-20deg); }
+    }
+    @keyframes float-two {
+      0%, 100% { transform: translate(0, -30px) rotate(2deg); }
+      50% { transform: translate(8px, -50px) rotate(-5deg); }
+    }
+    @keyframes float-three {
+      0%, 100% { transform: translate(116px, 18px) rotate(28deg); }
+      50% { transform: translate(108px, -2px) rotate(20deg); }
+    }
+
+    @media (max-width: 900px) {
+      .topnav { display: none; }
+      .hero { grid-template-columns: 1fr; padding-top: 70px; gap: 20px; }
+      .club-stage { min-height: 470px; }
+      .section-head { grid-template-columns: 1fr; gap: 18px; }
+      .summary-grid, .proof-grid, .show-grid { grid-template-columns: 1fr 1fr; }
+      .arch-grid { grid-template-columns: 1fr; }
+      .plus { min-height: 42px; }
+      .conversation { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .wrap { width: min(100% - 24px, 1160px); }
+      h1 { font-size: clamp(3.1rem, 17vw, 4.8rem); }
+      section { padding: 66px 0; }
+      .summary-grid, .proof-grid, .lesson-grid, .show-grid, .question-grid { grid-template-columns: 1fr; }
+      .architecture, .conversation { padding: 24px; border-radius: 24px; }
+      .club-stage { min-height: 410px; transform: scale(0.82); margin: -30px -40px; }
+      .stage-note { right: 34px; }
+      footer .wrap { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+    }
+
+    @media print {
+      .topbar, .actions { display: none; }
+      body { color: #17121d; background: #fff; }
+      .hero { min-height: auto; grid-template-columns: 1fr; padding: 30px 0; }
+      .club-stage { display: none; }
+      .card, .architecture, .conversation, details { color: #17121d; background: #fff; box-shadow: none; border-color: #ccc; break-inside: avoid; }
+      .card p, .section-head p, .arch-card > p, .milestone p, .lesson p, .show-card p, .conversation > div > p, details p, details ul { color: #4a4350; }
+      .arch-card, .question { background: #fff; border-color: #ccc; }
+      .question p, .hybrid, .card strong { color: #17121d; }
+      footer { color: #4a4350; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span> Creator Clubs · Luke + Yuki</div>
+      <nav class="topnav" aria-label="Page sections">
+        <a href="#idea">The idea</a>
+        <a href="#proof">What worked</a>
+        <a href="#lessons">Lessons</a>
+        <a href="#next">What’s next</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Project briefing · July 2026</div>
+        <h1>Three clubs.<br><span class="gradient">One new performance language.</span></h1>
+        <p>We’re teaching programmable juggling clubs to respond to movement, music, and choreography—then learning which ideas actually feel magical in a juggler’s hands.</p>
+        <div class="actions">
+          <a class="button primary" href="#idea">Tell me the story ↓</a>
+          <button class="button" type="button" onclick="window.print()">Print / save as PDF</button>
+        </div>
+        <div class="status-row" aria-label="Current project status">
+          <span class="pill">3 clubs working together</span>
+          <span class="pill">Movement sensing proven</span>
+          <span class="pill">Music shows working</span>
+        </div>
+      </div>
+
+      <div class="club-stage" role="img" aria-label="Three glowing juggling clubs floating together">
+        <div class="club one"></div>
+        <div class="club two"></div>
+        <div class="club three"></div>
+        <div class="stage-note"><strong>The big insight</strong> The lights aren’t decoration. They can become part of the juggling vocabulary.</div>
+      </div>
+    </div>
+
+    <section id="idea">
+      <div class="wrap">
+        <div class="section-head">
+          <div><div class="eyebrow">The shortest version</div><h2>What are we building?</h2></div>
+          <p>A creative toolkit for rehearsal and performance—not one fixed trick. Yuki should be able to explore an effect, move with it, keep what feels good, and eventually arrange those discoveries into a show.</p>
+        </div>
+        <div class="summary-grid">
+          <article class="card" style="--accent:var(--cyan);--card-glow:rgba(86,243,228,.16)">
+            <span class="num">01 · EXPLORE</span>
+            <h3>Movement becomes color</h3>
+            <p>Angle, spinning, acceleration, and activity can shape what the club displays while it is moving.</p>
+          </article>
+          <article class="card" style="--accent:var(--gold);--card-glow:rgba(255,216,77,.15)">
+            <span class="num">02 · REHEARSE</span>
+            <h3>The button becomes a scene picker</h3>
+            <p>One club can carry several ideas. A press moves to the next scene so Yuki can test patterns without returning to the computer.</p>
+          </article>
+          <article class="card" style="--accent:var(--pink);--card-glow:rgba(255,98,202,.16)">
+            <span class="num">03 · PERFORM</span>
+            <h3>Music and juggling meet</h3>
+            <p>A song can drive the large visual story while the juggler performs movements designed for each moment.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div><div class="eyebrow">Two modes</div><h2>Same clubs, two very different experiences.</h2></div>
+          <p>We have working examples of both approaches. The most exciting destination may combine them.</p>
+        </div>
+        <div class="architecture">
+          <div class="arch-grid">
+            <article class="arch-card">
+              <span class="arch-label">Music-directed</span>
+              <h3>The show leads</h3>
+              <p>The Mac plays the song and sends a prepared light score to all three clubs. Big changes can land exactly with musical sections and beats.</p>
+              <div class="flow" aria-label="Music show flow"><span>Song</span><i>→</i><span>BenTo</span><i>→</i><span>3 clubs</span></div>
+            </article>
+            <div class="plus" aria-hidden="true">+</div>
+            <article class="arch-card">
+              <span class="arch-label">Movement-directed</span>
+              <h3>The juggler leads</h3>
+              <p>A small program runs inside each club. Its own sensors shape color and motion immediately, even without the computer drawing every frame.</p>
+              <div class="flow" aria-label="Movement scene flow"><span>Movement</span><i>→</i><span>Club sensors</span><i>→</i><span>Light</span></div>
+            </article>
+          </div>
+          <div class="hybrid"><strong>Our likely sweet spot:</strong> the song chooses the scene; Yuki’s movement brings that scene to life.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="proof">
+      <div class="wrap">
+        <div class="section-head">
+          <div><div class="eyebrow">What we proved</div><h2>From mystery hardware to a creative instrument.</h2></div>
+          <p>This moved quickly because each step was tested on the physical clubs. Failures were useful: they showed us where the real boundaries are.</p>
+        </div>
+        <div class="timeline">
+          <article class="milestone"><div class="dot">1</div><div><h3>We made the three clubs a safe, shared baseline.</h3><p>Factory recovery copies were preserved, a stable public firmware version was installed, and all three clubs were brought online one at a time.</p></div></article>
+          <article class="milestone"><div class="dot">2</div><div><h3>All three now appear together in BenTo over Wi‑Fi.</h3><p>They can be controlled as a group or addressed individually. A dedicated portable show network is the eventual theatre-friendly setup.</p></div></article>
+          <article class="milestone"><div class="dot">3</div><div><h3>Rolling a club around its long axis changed its color.</h3><p>This was the first “oh wow” moment: the physical orientation of the prop became part of the effect, and matching colors appeared at repeatable points in the air.</p></div></article>
+          <article class="milestone"><div class="dot">4</div><div><h3>A button-driven program ran inside a club.</h3><p>The first test cycled red, green, and blue. It grew into four sensor scenes: orientation wheel, orbit comet, activity flame, and spin heat.</p></div></article>
+          <article class="milestone"><div class="dot">5</div><div><h3>We learned to score complete songs.</h3><p>BenTo can play music and light cues from the same clock. We now analyze a song’s sections, repeated ideas, builds, impacts, and rests before composing the lights.</p></div></article>
+          <article class="milestone"><div class="dot">6</div><div><h3>We made several full performance studies.</h3><p>They range from sparse Japanese koto to bass-heavy electronic tracks, Yuki’s existing performance song, and the newly prepared Heartaches show.</p></div></article>
+        </div>
+        <details>
+          <summary>Dig deeper: what is BenTo?</summary>
+          <p>BenTo is the Mac application that discovers the clubs, creates patterns and timelines, plays music, and sends live color information over Wi‑Fi. We can now generate a show as a file, load it into the running app, assign it to the clubs, and verify that it is ready—without manually rebuilding every cue.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="lessons">
+      <div class="wrap">
+        <div class="section-head">
+          <div><div class="eyebrow">The artistic lessons</div><h2>The clubs taught us how they want to be composed.</h2></div>
+          <p>These rules did not come from a screen. They came from watching the real props in a dark room and in motion.</p>
+        </div>
+        <div class="lesson-grid">
+          <article class="card lesson">
+            <div class="lesson-icon">☀</div>
+            <div><h3>Never casually disappear</h3><p>A juggling prop needs some light at nearly all times so the performer can catch it and the audience can follow its path. Fine detail rides over a visible base.</p></div>
+          </article>
+          <article class="card lesson">
+            <div class="lesson-icon" style="--icon-bg:rgba(158,108,255,.12);--icon-color:var(--violet)">≡</div>
+            <div><h3>Unison is the default</h3><p>Because the clubs constantly trade places, one unexplained odd club looks like a mistake. They stay identical unless the difference is clearly part of the effect.</p></div>
+          </article>
+          <article class="card lesson">
+            <div class="lesson-icon" style="--icon-bg:rgba(255,216,77,.12);--icon-color:var(--gold)">↑</div>
+            <div><h3>Compose for the body</h3><p>The large upper body shines more than the narrow handle. Important cues should fill the body or the whole prop, not hide in a tiny handle detail.</p></div>
+          </article>
+          <article class="card lesson">
+            <div class="lesson-icon" style="--icon-bg:rgba(255,77,98,.12);--icon-color:var(--coral)">♥</div>
+            <div><h3>Let the music have memory</h3><p>When a musical idea returns, its visual family should return too—then grow brighter, faster, fuller, or stranger as the song develops.</p></div>
+          </article>
+          <article class="card lesson">
+            <div class="lesson-icon" style="--icon-bg:rgba(86,243,228,.1);--icon-color:var(--cyan)">◎</div>
+            <div><h3>Movement can justify difference</h3><p>If two clubs look different because Yuki is moving them differently, the audience can understand the cause. Sensor-driven variation feels intentional.</p></div>
+          </article>
+          <article class="card lesson">
+            <div class="lesson-icon" style="--icon-bg:rgba(255,98,202,.1);--icon-color:var(--pink)">✦</div>
+            <div><h3>Brightness is part of the drama</h3><p>Low light protects visibility and battery. The peaks should still exploit how gorgeous, saturated, and bright these props can be.</p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div><div class="eyebrow">Creative studies</div><h2>Different songs teach different lessons.</h2></div>
+          <p>These are not finished stage works. They are experiments we can watch, discuss, and improve with Yuki’s movement knowledge.</p>
+        </div>
+        <div class="show-grid">
+          <article class="card show-card" style="--energy:36%"><div><span class="tag">Acoustic / phrase-led</span><h3>Kōjō no Tsuki</h3><p>Moonlit koto phrases, drifting petals, lantern shimmer, and long musical breath instead of a rigid beat grid.</p></div><div class="energy"><span></span></div></article>
+          <article class="card show-card" style="--energy:84%"><div><span class="tag">Electronic / music-linked</span><h3>Gettosinfonía</h3><p>Rising tones drive color, siren-like passages become bold red/blue vocabularies, and every club stays in unison.</p></div><div class="energy"><span></span></div></article>
+          <article class="card show-card" style="--energy:78%"><div><span class="tag">Yuki’s performance track</span><h3>Papa Was Stoned</h3><p>A complete long-form visual interpretation that taught us why small unexplained differences between clubs are distracting.</p></div><div class="energy"><span></span></div></article>
+          <article class="card show-card" style="--energy:100%"><div><span class="tag">New / trap experiment</span><h3>Heartaches</h3><p>Red double-heartbeats for the heartbreak passages, bright body-first color, and an intentionally unhinged heavy-trap overload.</p></div><div class="energy"><span></span></div></article>
+          <article class="card show-card" style="--energy:64%"><div><span class="tag">First proof</span><h3>Exit the Premises</h3><p>Our first confirmation that one BenTo timeline could play a song and send authored color to a physical club.</p></div><div class="energy"><span></span></div></article>
+          <article class="card show-card" style="--energy:72%"><div><span class="tag">Movement / local</span><h3>Sensor Playground</h3><p>Four button-selected ideas that turn orientation, orbit, activity, and spin into light directly on the club.</p></div><div class="energy"><span></span></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="next">
+      <div class="wrap">
+        <div class="conversation">
+          <div>
+            <div class="eyebrow">The important conversation</div>
+            <h2>What does Yuki want the light to say?</h2>
+            <p>The technology is ready enough to stop guessing in isolation. The next progress comes from pairing Yuki’s movement instincts with fast visual experiments.</p>
+            <ol class="demo-list">
+              <li><div><strong>Orientation color</strong><small>Roll one club and feel the movement-to-color relationship.</small></div></li>
+              <li><div><strong>Sensor playground</strong><small>Click through the four local scenes and move with each one.</small></div></li>
+              <li><div><strong>One music show</strong><small>Watch all three together and discuss what reads while juggling.</small></div></li>
+              <li><div><strong>Choose the next experiment</strong><small>Build from a movement Yuki already loves performing.</small></div></li>
+            </ol>
+          </div>
+          <div class="question-grid">
+            <article class="question"><span>01 · MOVEMENT</span><p>Which throws, rolls, stalls, spins, or catches deserve their own visual response?</p></article>
+            <article class="question"><span>02 · CONTROL</span><p>During practice, should scenes change by button, by time, by movement, or by a mixture?</p></article>
+            <article class="question"><span>03 · FEELING</span><p>What emotions should the lights express—power, tension, comedy, weightlessness, surprise?</p></article>
+            <article class="question"><span>04 · CHOREOGRAPHY</span><p>When should all three props match, and when would a deliberate difference help tell the story?</p></article>
+            <article class="question"><span>05 · MUSIC</span><p>Which existing routine should we score first with Yuki’s exact movement and timing notes?</p></article>
+            <article class="question"><span>06 · THEATRE</span><p>What must be foolproof backstage so this feels like an instrument, not a computer demo?</p></article>
+          </div>
+        </div>
+
+        <details>
+          <summary>Dig deeper: what remains uncertain?</summary>
+          <ul>
+            <li>Which sensor scenes still look legible at full juggling speed?</li>
+            <li>How precisely can three clubs stay aligned through an entire performance?</li>
+            <li>Should local movement response run alone, or inside music-selected scenes?</li>
+            <li>How should scenes resume after a club, computer, or show-network interruption?</li>
+            <li>Can persistence of vision create readable shapes or images during controlled swings?</li>
+          </ul>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div><strong>Creator Clubs</strong><br>Luke Closs + Yuki · an open creative-development project</div>
+      <div>Built from physical experiments, honest failures, and a lot of glowing juggling.</div>
+    </div>
+  </footer>
+</body>
+</html>

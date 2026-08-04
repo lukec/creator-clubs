@@ -1,0 +1,1085 @@
+<div id="motion-lab-v6-emulator">
+  <div class="motion-toolbar">
+    <div class="toolbar-main">
+      <label class="form-label" for="motion-page">Page
+        <select class="form-select" id="motion-page">
+          <optgroup label="Exact on-club cartridge">
+            <option value="wasm:0">P1 Roll</option>
+            <option value="wasm:1">P2 Flip</option>
+            <option value="wasm:2">P3 Energy</option>
+            <option value="wasm:3">P4 Flight</option>
+            <option value="wasm:4">P5 Police</option>
+          </optgroup>
+          <optgroup label="Web Studio sketches">
+            <option value="theme:lightning">Lightning Storm</option>
+            <option value="theme:fire">Fire / Furnace</option>
+            <option value="theme:ocean">Bioluminescent Ocean</option>
+            <option value="theme:toxic">Toxic Reactor</option>
+            <option value="theme:arcade">Arcade Power-Up</option>
+            <option value="theme:disco">Disco / Mirrorball</option>
+            <option value="theme:haunted">Haunted / Ghost</option>
+            <option value="theme:solar">Solar Sunset</option>
+            <option value="theme:matsuri">Matsuri Night</option>
+            <option value="theme:racing">Traffic / Racing</option>
+            <option value="theme:candy">Candy / Unicorn</option>
+            <option value="theme:fire-ice">Fire and Ice</option>
+          </optgroup>
+        </select>
+      </label>
+      <button class="btn btn-primary" id="motion-move" type="button" aria-pressed="false">Move it</button>
+      <label class="form-label" for="motion-activity">
+        Activity <span id="motion-activity-value">25%</span>
+        <input class="form-range" id="motion-activity" type="range" min="0" max="100" step="1" value="25">
+      </label>
+      <fieldset class="throw-control">
+        <legend class="form-label">Throw</legend>
+        <div class="throw-options" role="radiogroup" aria-label="Throw classification">
+          <button class="btn throw-option" type="button" data-throw-state="0" aria-pressed="true"><b>0</b> Held</button>
+          <button class="btn throw-option" type="button" data-throw-state="1" aria-pressed="false"><b>1</b> Flat</button>
+          <button class="btn throw-option" type="button" data-throw-state="2" aria-pressed="false"><b>2</b> Single</button>
+          <button class="btn throw-option" type="button" data-throw-state="3" aria-pressed="false"><b>3</b> Double+</button>
+          <button class="btn throw-option" type="button" data-throw-state="4" aria-pressed="false"><b>4</b> Flat-front</button>
+          <button class="btn throw-option" type="button" data-throw-state="5" aria-pressed="false"><b>5</b> Loftie</button>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="viz-grid motion-pose-controls">
+      <div class="pose-control">
+        <div class="pose-heading">
+          <label class="form-label" for="motion-roll">Roll</label>
+          <div class="pose-heading-actions">
+            <span id="motion-roll-value">−120°</span>
+            <button class="btn btn-ghost pose-auto" id="motion-roll-auto" type="button" aria-pressed="false">Auto</button>
+          </div>
+        </div>
+        <div class="pose-stage card roll-stage">
+          <span class="pose-axis-label text-small text-muted">Knob end view</span>
+          <span class="roll-zero text-small text-muted" aria-hidden="true">0°</span>
+          <div class="roll-face" id="motion-roll-face" aria-hidden="true">
+            <span class="roll-cross roll-cross-horizontal"></span>
+            <span class="roll-cross roll-cross-vertical"></span>
+            <span class="roll-arm"><span class="roll-handle"></span></span>
+            <span class="roll-hub"></span>
+          </div>
+          <input id="motion-roll" class="pose-input" type="range" min="-180" max="180" step="1" value="-120">
+        </div>
+        <div class="pose-help text-small text-muted">Drag around the knob · 0° is up</div>
+      </div>
+
+      <div class="pose-control">
+        <div class="pose-heading">
+          <label class="form-label" for="motion-flip">Flip</label>
+          <div class="pose-heading-actions">
+            <span id="motion-flip-value">43°</span>
+            <button class="btn btn-ghost pose-auto" id="motion-flip-auto" type="button" aria-pressed="false">Auto</button>
+          </div>
+        </div>
+        <div class="pose-stage card flip-stage">
+          <span class="flip-marker flip-marker-up text-small text-muted" aria-hidden="true">UP · 0°</span>
+          <span class="flip-marker flip-marker-down text-small text-muted" aria-hidden="true">DOWN · 180°</span>
+          <div class="flip-club" id="motion-flip-club" aria-hidden="true">
+            <span class="flip-club-cap"></span>
+            <span class="flip-club-body"></span>
+            <span class="flip-club-handle"></span>
+            <span class="flip-club-knob"></span>
+          </div>
+          <span class="flip-pivot" aria-hidden="true"></span>
+          <input id="motion-flip" class="pose-input" type="range" min="0" max="360" step="1" value="43">
+        </div>
+        <div class="pose-help text-small text-muted">Drag the club · body points toward the angle</div>
+      </div>
+    </div>
+  </div>
+  <div class="runtime-line text-small" id="motion-runtime" aria-live="polite">Loading exact WASM…</div>
+
+  <div class="juggle-preview" id="motion-juggle-preview" hidden>
+    <div class="viz-row">
+      <span id="motion-juggle-label">Selected effect · juggling preview</span>
+      <button class="btn btn-ghost" id="motion-juggle-close" type="button">Close</button>
+    </div>
+    <div class="juggle-stage" id="motion-juggle-stage"></div>
+    <div class="text-small text-muted">Fixed audience camera · each club drives its own Roll, Flip, Activity, and Throw State</div>
+  </div>
+
+  <div class="pattern-list" id="motion-patterns" aria-live="polite"></div>
+</div>
+
+<style>
+  #motion-lab-v6-emulator {
+    color: var(--foreground);
+    width: 100%;
+    --motion-toolbar-clearance: 190px;
+  }
+  #motion-lab-v6-emulator .motion-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 8px 0 6px;
+    background: var(--background);
+  }
+  #motion-lab-v6-emulator .form-label {
+    min-width: 0;
+  }
+  #motion-lab-v6-emulator .toolbar-main {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.5fr) auto minmax(150px, 1fr) minmax(150px, 1fr);
+    gap: 8px;
+    align-items: end;
+  }
+  #motion-lab-v6-emulator .toolbar-main .form-label {
+    margin: 0;
+  }
+  #motion-lab-v6-emulator .toolbar-main :is(.form-select, .form-range) {
+    width: 100%;
+    min-width: 0;
+  }
+  #motion-lab-v6-emulator .throw-control {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  #motion-lab-v6-emulator .throw-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+  #motion-lab-v6-emulator .throw-option {
+    min-width: 0;
+    padding: 6px 5px;
+    white-space: nowrap;
+  }
+  #motion-lab-v6-emulator .throw-option[aria-pressed="true"] {
+    border-color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 22%, var(--card));
+    color: var(--foreground);
+  }
+  #motion-lab-v6-emulator .pattern-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    position: relative;
+    margin-top: 12px;
+  }
+  #motion-lab-v6-emulator .club-gallery-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  #motion-lab-v6-emulator .pattern-tile {
+    position: relative;
+    min-width: 0;
+    aspect-ratio: 1;
+    overflow: hidden;
+    scroll-margin-top: var(--motion-toolbar-clearance);
+  }
+  #motion-lab-v6-emulator .pattern-juggle {
+    position: absolute;
+    z-index: 3;
+    top: 8px;
+    right: 8px;
+  }
+  #motion-lab-v6-emulator .pattern-meta {
+    position: absolute;
+    z-index: 3;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 22px 10px 10px;
+    background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--card) 92%, transparent) 34%);
+    pointer-events: none;
+  }
+  #motion-lab-v6-emulator .pattern-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  #motion-lab-v6-emulator .pattern-name {
+    font-weight: 500;
+  }
+  #motion-lab-v6-emulator .pattern-description {
+    display: block;
+    margin-top: 3px;
+  }
+  #motion-lab-v6-emulator .juggle-preview {
+    grid-column: 1 / -1;
+    position: relative;
+    z-index: 2;
+    margin-bottom: 12px;
+    scroll-margin-top: var(--motion-toolbar-clearance);
+  }
+  #motion-lab-v6-emulator .juggle-preview .viz-row {
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  #motion-lab-v6-emulator .juggle-stage {
+    width: 100%;
+    height: clamp(250px, 52vw, 380px);
+    overflow: hidden;
+    color: CanvasText;
+    color-scheme: dark;
+    background: Canvas;
+  }
+  #motion-lab-v6-emulator .juggle-stage canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  #motion-lab-v6-emulator .motion-pose-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 8px;
+    margin: 6px 0 0;
+  }
+  #motion-lab-v6-emulator .pose-control {
+    min-width: 0;
+  }
+  #motion-lab-v6-emulator .pose-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  #motion-lab-v6-emulator .pose-heading .form-label {
+    min-width: 0;
+    margin: 0;
+  }
+  #motion-lab-v6-emulator .pose-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  #motion-lab-v6-emulator .pose-auto[aria-pressed="true"] {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  #motion-lab-v6-emulator .pose-stage {
+    position: relative;
+    height: 88px;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+  }
+  #motion-lab-v6-emulator .pose-stage:focus-within {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  #motion-lab-v6-emulator .pose-input {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: grab;
+    touch-action: none;
+  }
+  #motion-lab-v6-emulator .pose-input:active {
+    cursor: grabbing;
+  }
+  #motion-lab-v6-emulator .pose-axis-label {
+    display: none;
+  }
+  #motion-lab-v6-emulator .pose-help {
+    display: none;
+  }
+  #motion-lab-v6-emulator .roll-zero {
+    position: absolute;
+    left: 50%;
+    top: 2px;
+    transform: translateX(-50%);
+  }
+  #motion-lab-v6-emulator .roll-face {
+    --pose-angle: -120deg;
+    position: absolute;
+    left: 50%;
+    top: 54%;
+    width: 62px;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border: 2px solid var(--foreground);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--muted) 76%, transparent);
+  }
+  #motion-lab-v6-emulator .roll-cross {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    background: var(--border);
+    transform: translate(-50%, -50%);
+  }
+  #motion-lab-v6-emulator .roll-cross-horizontal {
+    width: 100%;
+    height: 1px;
+  }
+  #motion-lab-v6-emulator .roll-cross-vertical {
+    width: 1px;
+    height: 100%;
+  }
+  #motion-lab-v6-emulator .roll-arm {
+    position: absolute;
+    left: calc(50% - 2px);
+    top: 4px;
+    width: 4px;
+    height: calc(50% - 4px);
+    border-radius: 999px;
+    background: var(--primary);
+    transform: rotate(var(--pose-angle));
+    transform-origin: 50% 100%;
+  }
+  #motion-lab-v6-emulator .roll-handle {
+    position: absolute;
+    left: 50%;
+    top: -6px;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--primary-foreground);
+    border-radius: 50%;
+    background: var(--primary);
+    transform: translateX(-50%);
+  }
+  #motion-lab-v6-emulator .roll-hub,
+  #motion-lab-v6-emulator .flip-pivot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--primary-foreground);
+    border-radius: 50%;
+    background: var(--primary);
+    transform: translate(-50%, -50%);
+  }
+  #motion-lab-v6-emulator .flip-marker {
+    display: none;
+  }
+  #motion-lab-v6-emulator .flip-marker-up {
+    top: 9px;
+  }
+  #motion-lab-v6-emulator .flip-marker-down {
+    bottom: 9px;
+  }
+  #motion-lab-v6-emulator .flip-club {
+    --pose-angle: 43deg;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 28px;
+    height: 76px;
+    transform: translate(-50%, -50%) rotate(var(--pose-angle));
+    transform-origin: 50% 50%;
+  }
+  #motion-lab-v6-emulator .flip-club-cap,
+  #motion-lab-v6-emulator .flip-club-body,
+  #motion-lab-v6-emulator .flip-club-handle,
+  #motion-lab-v6-emulator .flip-club-knob {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  #motion-lab-v6-emulator .flip-club-cap {
+    top: 0;
+    z-index: 2;
+    width: 16px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--muted-foreground);
+  }
+  #motion-lab-v6-emulator .flip-club-body {
+    top: 3px;
+    width: 26px;
+    height: 38px;
+    border: 1px solid var(--foreground);
+    border-radius: 42% 42% 25% 25% / 18% 18% 82% 82%;
+    background: color-mix(in srgb, var(--primary) 34%, var(--card));
+  }
+  #motion-lab-v6-emulator .flip-club-handle {
+    top: 38px;
+    width: 9px;
+    height: 32px;
+    border: 1px solid var(--foreground);
+    border-radius: 0 0 999px 999px;
+    background: color-mix(in srgb, var(--primary) 20%, var(--card));
+  }
+  #motion-lab-v6-emulator .flip-club-knob {
+    bottom: 0;
+    z-index: 2;
+    width: 18px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--muted-foreground);
+  }
+  #motion-lab-v6-emulator .runtime-line {
+    margin: 8px 0 12px;
+    color: var(--muted-foreground);
+  }
+  #motion-lab-v6-emulator .runtime-line.is-error {
+    color: var(--destructive);
+  }
+  @media (max-width: 500px) {
+    #motion-lab-v6-emulator {
+      --motion-toolbar-clearance: 250px;
+    }
+    #motion-lab-v6-emulator .toolbar-main {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+    #motion-lab-v6-emulator .throw-control {
+      grid-column: 1 / -1;
+    }
+    #motion-lab-v6-emulator .throw-options {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    #motion-lab-v6-emulator .throw-option {
+      padding-inline: 2px;
+      font-size: 0;
+    }
+    #motion-lab-v6-emulator .throw-option b {
+      font-size: 0.8rem;
+    }
+    #motion-lab-v6-emulator .pattern-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    #motion-lab-v6-emulator .motion-pose-controls {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+    #motion-lab-v6-emulator .pose-stage {
+      height: 84px;
+    }
+    #motion-lab-v6-emulator .juggle-stage {
+      height: 300px;
+    }
+  }
+  @media (min-width: 501px) and (max-width: 900px) {
+    #motion-lab-v6-emulator .pattern-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+
+<script>
+__CREATOR_CLUB_3D_BUNDLE__
+</script>
+
+
+<script>
+(() => {
+  const WASM_BASE64 = "__WASM_BASE64__";
+  const root = document.getElementById("motion-lab-v6-emulator");
+  const pageSelect = root.querySelector("#motion-page");
+  const moveButton = root.querySelector("#motion-move");
+  const patternList = root.querySelector("#motion-patterns");
+  const previewHost = root.querySelector("#motion-juggle-preview");
+  const previewStage = root.querySelector("#motion-juggle-stage");
+  const previewLabel = root.querySelector("#motion-juggle-label");
+  const previewClose = root.querySelector("#motion-juggle-close");
+  const rollInput = root.querySelector("#motion-roll");
+  const rollAutoButton = root.querySelector("#motion-roll-auto");
+  const flipInput = root.querySelector("#motion-flip");
+  const flipAutoButton = root.querySelector("#motion-flip-auto");
+  const activityInput = root.querySelector("#motion-activity");
+  const throwButtons = [...root.querySelectorAll("[data-throw-state]")];
+  const rollValue = root.querySelector("#motion-roll-value");
+  const flipValue = root.querySelector("#motion-flip-value");
+  const rollFace = root.querySelector("#motion-roll-face");
+  const flipClub = root.querySelector("#motion-flip-club");
+  const activityValue = root.querySelector("#motion-activity-value");
+  const runtimeLine = root.querySelector("#motion-runtime");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const FRAME_INTERVAL = 1000 / 30;
+
+  const exactPages = [
+    {
+      name: "Roll",
+      effects: [
+        ["Seamless Cyan/Gold Wheel", "Smooth whole-club color follows long-axis roll"],
+        ["Violet White Rider", "Broad white pulse travels handle-to-body and back"],
+        ["Blue Pink Rider", "Moving pulse in the accepted blue/pink family"],
+        ["Teal Coral Split", "Roll moves a bright spatial boundary"],
+        ["Diffusion Bands", "Handle and body use differently sized color groups"],
+        ["Cyan Indigo Seam", "Two-sided fade removes the abrupt roll seam"],
+        ["Aurora Ribbon", "Continuous cyan-magenta spatial gradient"],
+        ["Mirror Portals", "Two broad opposed cyan/pink portals"],
+      ],
+    },
+    {
+      name: "Flip",
+      effects: [
+        ["Upright/Inverted Wash", "Upright cyan and inverted gold"],
+        ["Literal White Height", "White pulse tracks the club top and bottom"],
+        ["Pink Height Ribbon", "Blue/pink ribbon for graceful slow flips"],
+        ["Pose Boundary", "Flip angle controls a literal color boundary"],
+        ["Diffusion Flip Bands", "Broad grouped texture follows flip angle"],
+        ["Opposed Flip Portals", "Two opposing portals track the flip"],
+        ["Reversing Gradient", "Full-axis gradient reverses when inverted"],
+        ["Mirror Kaleidoscope", "Broad mirrored bands for slow flips"],
+      ],
+    },
+    {
+      name: "Energy",
+      effects: [
+        ["Fast Activity Flame", "Movement drives a bright flame and flickering tip"],
+        ["Stillness Bloom", "Breathing bloom grows while the club rests"],
+        ["Full-Range Contrast", "Deliberately dim at rest and bright in motion"],
+        ["Spin Heat", "Derived flip speed moves cyan toward coral"],
+        ["Direction Lock", "Purple at rest; cyan or pink shows direction"],
+        ["Rest-Stable Sparks", "Still at rest and progressively busier in motion"],
+        ["Hand/Air Field", "Purple in hand, coral in air, white at transition"],
+        ["Throw Class Field", "Six whole-club colors expose classification"],
+      ],
+    },
+    {
+      name: "Flight",
+      effects: [
+        ["Binary Flight Split", "Held purple field becomes a two-zone air field"],
+        ["Release/Catch Signals", "White release and cyan catch flashes"],
+        ["Airborne Tracer", "Angle moves a broad tracer only while airborne"],
+        ["Frozen Launch Color", "Launch orientation stays frozen through flight"],
+        ["Class Colors", "Focused six-color throw classifier diagnostic"],
+        ["Class Band Signatures", "Throw class selects band width and phase"],
+        ["Flight Energy", "Activity changes the airborne palette"],
+        ["Flight Roll Boundary", "Roll moves a teal/coral boundary in flight"],
+      ],
+    },
+    {
+      name: "Police",
+      effects: [
+        ["Full Pursuit", "Whole-club red/blue alternation"],
+        ["Double Tap", "Two red hits, then two blue hits"],
+        ["Roadblock 50/50", "Red/blue half split swaps once per beat"],
+        ["Body Alarm", "Large body leads while the handle answers"],
+        ["White Scanner", "Broad white scan over a police split"],
+        ["Braided Bands", "Four-LED red/blue blocks advance"],
+        ["Twin Beacons", "Opposed white heads with colored tails"],
+        ["Three-Zone Dispatch", "Red, blue, and white zones rotate"],
+      ],
+    },
+  ];
+  const themePages = window.CreatorClub3D.themePages;
+
+  const selection = () => {
+    const [kind, value] = pageSelect.value.split(":");
+    if (kind === "wasm") {
+      const pageIndex = Number(value);
+      return {
+        kind,
+        pageIndex,
+        page: exactPages[pageIndex],
+        label: `P${pageIndex + 1}`,
+        effects: exactPages[pageIndex].effects.map(([name, description], index) => ({
+          id: `p${pageIndex + 1}e${index + 1}`,
+          name,
+          description,
+        })),
+      };
+    }
+    const themeIndex = themePages.findIndex((item) => item.id === value);
+    const theme = themePages[themeIndex];
+    assert(theme, `unknown theme page ${value}`);
+    return {
+      kind,
+      pageIndex: themeIndex,
+      page: theme,
+      label: `Studio ${themeIndex + 1}`,
+      effects: theme.effects,
+    };
+  };
+
+  const state = {
+    time: 0,
+    roll: Number(rollInput.value),
+    projectedAngle: Number(flipInput.value) / 360,
+    activityPercent: Number(activityInput.value),
+    activityMode: "manual",
+    throwState: Number(throwButtons.find((button) => button.getAttribute("aria-pressed") === "true")?.dataset.throwState || 0),
+    lastTimestamp: null,
+    lastRenderTimestamp: -Infinity,
+    accumulator: 0,
+    updateSamples: [],
+    moduleBytes: 0,
+  };
+
+  const rows = Array.from({ length: 8 }, (_, index) => {
+    const row = document.createElement("div");
+    row.className = "pattern-tile card";
+    const label = document.createElement("div");
+    label.className = "pattern-meta";
+    const heading = document.createElement("div");
+    heading.className = "pattern-heading";
+    const name = document.createElement("span");
+    name.className = "pattern-name";
+    const juggle = document.createElement("button");
+    juggle.className = "btn btn-ghost pattern-juggle";
+    juggle.type = "button";
+    juggle.textContent = "Juggle";
+    juggle.setAttribute("aria-pressed", "false");
+    const description = document.createElement("span");
+    description.className = "pattern-description text-small text-muted";
+    heading.append(name);
+    label.append(heading, description);
+    row.append(label, juggle);
+    patternList.append(row);
+    return {
+      index,
+      row,
+      name,
+      description,
+      juggle,
+      frame: Array.from({ length: 32 }, () => [0, 0, 0]),
+      instance: null,
+      phase: "loading",
+      imuEnabled: 0,
+      initHardwareCalls: [],
+    };
+  });
+  const previewSlots = Array.from({ length: 3 }, (_, index) => ({
+    index,
+    frame: Array.from({ length: 32 }, () => [0, 0, 0]),
+    instance: null,
+    phase: "loading",
+    imuEnabled: 0,
+    initHardwareCalls: [],
+    sensor: {
+      time: 0,
+      roll: 0,
+      projectedAngle: 0,
+      activityPercent: 0,
+      throwState: 0,
+    },
+  }));
+
+  let selectedPreview = null;
+  let clubPreview = null;
+  let previewFailed = false;
+  let clubGallery = null;
+  let galleryFailed = false;
+
+  const assert = (condition, message) => {
+    if (!condition) throw new Error(message);
+  };
+  const channel = (value) => {
+    assert(Number.isInteger(value) && value >= 0 && value <= 255, `invalid RGB channel ${value}`);
+    return value;
+  };
+  const makeArduino = (slot, sensors = state) => {
+    const record = (name) => {
+      if (slot.phase === "init" && name !== "printInt") slot.initHardwareCalls.push(name);
+    };
+    const setAll = (red, green, blue) => {
+      const rgb = [channel(red), channel(green), channel(blue)];
+      slot.frame.forEach((led) => led.splice(0, 3, ...rgb));
+    };
+    return {
+      clearLeds() { record("clearLeds"); setAll(0, 0, 0); },
+      fillLedsRGB(red, green, blue) { record("fillLedsRGB"); setAll(red, green, blue); },
+      setLedRGB(index, red, green, blue) {
+        record("setLedRGB");
+        assert(Number.isInteger(index) && index >= 0 && index < 32, `invalid LED ${index}`);
+        slot.frame[index].splice(0, 3, channel(red), channel(green), channel(blue));
+      },
+      getButtonState() { record("getButtonState"); return 0; },
+      setIMUEnabled(value) { record("setIMUEnabled"); slot.imuEnabled = value ? 1 : 0; },
+      getProjectedAngle() { record("getProjectedAngle"); return Math.fround(sensors.projectedAngle); },
+      getRoll() { record("getRoll"); return Math.fround(sensors.roll); },
+      getActivity() {
+        record("getActivity");
+        return Math.fround(0.005976 + sensors.activityPercent / 100 * 0.546515);
+      },
+      getThrowState() { record("getThrowState"); return sensors.throwState; },
+      getTime() { record("getTime"); return Math.fround(sensors.time ?? state.time); },
+      printInt() {},
+    };
+  };
+
+  const ensureGallery = () => {
+    if (galleryFailed) return null;
+    if (!clubGallery) {
+      try {
+        clubGallery = window.CreatorClub3D.createCreatorClubGallery({
+          mount: patternList,
+          tileElements: rows.map((row) => row.row),
+          ariaLabel: "Illuminated Creator Clubs showing every effect in the selected Motion Lab collection",
+        });
+      } catch (error) {
+        galleryFailed = true;
+        runtimeLine.classList.add("is-error");
+        runtimeLine.textContent = `3D gallery unavailable: ${error.message}`;
+      }
+    }
+    return clubGallery;
+  };
+
+  const ensurePreview = () => {
+    if (previewFailed) return null;
+    if (!clubPreview) {
+      try {
+        clubPreview = window.CreatorClub3D.createCreatorClubPreview({
+          mount: previewStage,
+          ariaLabel: "Three illuminated Creator Clubs juggling the selected Motion Lab effect",
+        });
+      } catch (error) {
+        previewFailed = true;
+        previewStage.textContent = `3D preview unavailable: ${error.message}`;
+        rows.forEach((row) => { row.juggle.disabled = true; });
+        return null;
+      }
+    }
+    return clubPreview;
+  };
+
+  const previewTime = () => reducedMotion ? 0.78 : state.time;
+  const syncPreviewSelection = () => {
+    if (selectedPreview === null) return;
+    const selected = selection();
+    if (selected.kind !== "wasm") return;
+    previewSlots.forEach((slot) => {
+      slot.instance?.exports.diagnosticSelect(selected.pageIndex, selectedPreview);
+    });
+  };
+  const updatePreviewFrames = (timeSeconds = previewTime()) => {
+    if (selectedPreview === null || previewHost.hidden) return;
+    const selected = selection();
+    const effect = selected.effects[selectedPreview];
+    const poses = window.CreatorClub3D.sampleThreeClubCascade(timeSeconds);
+    previewSlots.forEach((slot, index) => {
+      const pose = poses[index];
+      slot.sensor.time = timeSeconds;
+      slot.sensor.roll = pose.rollDegrees;
+      slot.sensor.projectedAngle = pose.projectedAngle;
+      slot.sensor.activityPercent = pose.activity * 100;
+      slot.sensor.throwState = pose.throwState;
+      if (selected.kind === "wasm") {
+        slot.instance?.exports.update();
+      } else {
+        window.CreatorClub3D.renderThemeEffect(
+          effect.id,
+          slot.sensor,
+          timeSeconds,
+          slot.frame,
+        );
+      }
+    });
+  };
+
+  const closePreview = () => {
+    if (selectedPreview !== null) rows[selectedPreview].juggle.setAttribute("aria-pressed", "false");
+    selectedPreview = null;
+    previewHost.hidden = true;
+    renderRows();
+  };
+  const placePreviewNear = (effectIndex) => {
+    const visibleRows = rows.filter((row) => !row.row.hidden);
+    const selectedPosition = visibleRows.findIndex((row) => row.index === effectIndex);
+    const renderedColumns = getComputedStyle(patternList).gridTemplateColumns
+      .split(/\s+/)
+      .filter(Boolean)
+      .length || 1;
+    const rowEndPosition = Math.min(
+      visibleRows.length - 1,
+      Math.ceil((selectedPosition + 1) / renderedColumns) * renderedColumns - 1,
+    );
+    visibleRows[rowEndPosition].row.after(previewHost);
+  };
+  const openPreview = (effectIndex) => {
+    if (selectedPreview === effectIndex && !previewHost.hidden) {
+      closePreview();
+      return;
+    }
+    rows.forEach((row, index) => row.juggle.setAttribute("aria-pressed", String(index === effectIndex)));
+    selectedPreview = effectIndex;
+    const selected = selection();
+    const effect = selected.effects[effectIndex];
+    previewLabel.textContent = `${selected.label}E${effectIndex + 1} · ${effect.name} · juggling preview`;
+    placePreviewNear(effectIndex);
+    previewHost.hidden = false;
+    syncPreviewSelection();
+    updatePreviewFrames();
+    ensurePreview()?.render(previewTime(), previewSlots.map((slot) => slot.frame));
+    window.requestAnimationFrame(() => previewHost.scrollIntoView({
+      behavior: reducedMotion ? "auto" : "smooth",
+      block: "nearest",
+    }));
+  };
+
+  const updateLabels = () => {
+    rollValue.textContent = `${state.roll < 0 ? "−" : ""}${Math.abs(Math.round(state.roll))}°`;
+    flipValue.textContent = `${Math.round(state.projectedAngle * 360)}°`;
+    rollFace.style.setProperty("--pose-angle", `${state.roll}deg`);
+    flipClub.style.setProperty("--pose-angle", `${state.projectedAngle * 360}deg`);
+    rollInput.setAttribute("aria-valuetext", `${Math.abs(Math.round(state.roll))} degrees ${state.roll < 0 ? "counterclockwise" : "clockwise"}`);
+    const flipDegrees = Math.round(state.projectedAngle * 360) % 360;
+    const flipDirection = ["body up", "body right", "body down", "body left"][Math.round(flipDegrees / 90) % 4];
+    flipInput.setAttribute("aria-valuetext", `${flipDegrees} degrees, ${flipDirection}`);
+    if (state.activityMode === "motion") {
+      activityInput.value = String(Math.round(state.activityPercent));
+    }
+    activityValue.textContent = `${Math.round(state.activityPercent)}%${state.activityMode === "motion" ? " · motion" : ""}`;
+    activityInput.setAttribute(
+      "aria-valuetext",
+      `${Math.round(state.activityPercent)} percent${state.activityMode === "motion" ? ", derived from pose motion" : ", manual"}`,
+    );
+  };
+
+  const selectPage = () => {
+    closePreview();
+    const selected = selection();
+    rows.forEach((row, effectIndex) => {
+      const effect = selected.effects[effectIndex];
+      const visible = Boolean(effect);
+      row.row.hidden = !visible;
+      if (!visible) return;
+      const exact = selected.kind === "wasm";
+      row.name.textContent = `${selected.label}E${effectIndex + 1} · ${effect.name}`;
+      row.description.textContent = effect.description;
+      row.row.setAttribute("aria-label", `${selected.label}E${effectIndex + 1} ${effect.name}: ${exact ? "exact WebAssembly output" : "Web Studio sketch"} on a simulated Creator Club`);
+      row.juggle.setAttribute("aria-label", `Juggle ${selected.label}E${effectIndex + 1} ${effect.name}`);
+      if (exact && row.instance) row.instance.exports.diagnosticSelect(selected.pageIndex, effectIndex);
+    });
+    ensureGallery()?.setActiveCount(selected.effects.length);
+    runtimeLine.textContent = selected.kind === "wasm"
+      ? `Ready · exact ${state.moduleBytes.toLocaleString()} / 16,000 bytes · 8 live 3D effects · one shared renderer · 50 Hz`
+      : `Web Studio sketch · ${selected.effects.length} live 3D effects · browser only, not yet on the club`;
+  };
+
+  const setAutoButton = (button, enabled) => {
+    button.setAttribute("aria-pressed", String(enabled));
+  };
+  const autoEnabled = (button) => button.getAttribute("aria-pressed") === "true";
+  const syncMoveButton = () => {
+    setAutoButton(moveButton, autoEnabled(rollAutoButton) && autoEnabled(flipAutoButton));
+  };
+  const shortestDegreesDelta = (previous, next) => Math.abs(
+    ((next - previous + 540) % 360) - 180,
+  );
+  const applyPoseActivity = (deltaDegrees, decay = 0.72) => {
+    state.activityMode = "motion";
+    state.activityPercent = Math.min(
+      100,
+      Math.max(state.activityPercent * decay, deltaDegrees * 12),
+    );
+  };
+  const stopRollAuto = () => {
+    setAutoButton(rollAutoButton, false);
+    syncMoveButton();
+  };
+  const stopFlipAuto = () => {
+    setAutoButton(flipAutoButton, false);
+    syncMoveButton();
+  };
+  rollInput.addEventListener("input", () => {
+    const previous = state.roll;
+    stopRollAuto();
+    state.roll = Number(rollInput.value);
+    applyPoseActivity(shortestDegreesDelta(previous, state.roll));
+    updateLabels();
+  });
+  flipInput.addEventListener("input", () => {
+    const previous = state.projectedAngle * 360;
+    stopFlipAuto();
+    state.projectedAngle = Number(flipInput.value) / 360;
+    applyPoseActivity(shortestDegreesDelta(previous, state.projectedAngle * 360));
+    updateLabels();
+  });
+  activityInput.addEventListener("input", () => {
+    state.activityMode = "manual";
+    state.activityPercent = Number(activityInput.value);
+    updateLabels();
+  });
+  throwButtons.forEach((button) => button.addEventListener("click", () => {
+    state.throwState = Number(button.dataset.throwState);
+    throwButtons.forEach((entry) => entry.setAttribute("aria-pressed", String(entry === button)));
+  }));
+  rollAutoButton.addEventListener("click", () => {
+    setAutoButton(rollAutoButton, !autoEnabled(rollAutoButton));
+    if (autoEnabled(rollAutoButton)) state.activityMode = "motion";
+    syncMoveButton();
+  });
+  flipAutoButton.addEventListener("click", () => {
+    setAutoButton(flipAutoButton, !autoEnabled(flipAutoButton));
+    if (autoEnabled(flipAutoButton)) state.activityMode = "motion";
+    syncMoveButton();
+  });
+  moveButton.addEventListener("click", () => {
+    const enabled = !autoEnabled(moveButton);
+    setAutoButton(rollAutoButton, enabled);
+    setAutoButton(flipAutoButton, enabled);
+    setAutoButton(moveButton, enabled);
+    if (enabled) state.activityMode = "motion";
+  });
+  pageSelect.addEventListener("change", selectPage);
+  rows.forEach((row, index) => row.juggle.addEventListener("click", () => openPreview(index)));
+  previewClose.addEventListener("click", closePreview);
+
+  const bindRadialInput = (input, normalizeAngle) => {
+    let activePointer = null;
+    const setFromPointer = (event) => {
+      const bounds = input.getBoundingClientRect();
+      const x = event.clientX - (bounds.left + bounds.width / 2);
+      const y = event.clientY - (bounds.top + bounds.height / 2);
+      const clockwiseFromUp = (Math.atan2(y, x) * 180 / Math.PI + 90 + 360) % 360;
+      input.value = String(Math.round(normalizeAngle(clockwiseFromUp)));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    input.addEventListener("pointerdown", (event) => {
+      activePointer = event.pointerId;
+      input.focus();
+      input.setPointerCapture(event.pointerId);
+      setFromPointer(event);
+      event.preventDefault();
+    });
+    input.addEventListener("pointermove", (event) => {
+      if (event.pointerId === activePointer) setFromPointer(event);
+    });
+    const finishPointer = (event) => {
+      if (event.pointerId !== activePointer) return;
+      setFromPointer(event);
+      activePointer = null;
+      if (input.hasPointerCapture(event.pointerId)) input.releasePointerCapture(event.pointerId);
+    };
+    input.addEventListener("pointerup", finishPointer);
+    input.addEventListener("pointercancel", (event) => {
+      if (event.pointerId === activePointer) activePointer = null;
+    });
+  };
+  bindRadialInput(rollInput, (angle) => angle > 180 ? angle - 360 : angle);
+  bindRadialInput(flipInput, (angle) => angle);
+
+  const renderRows = () => {
+    if (selectedPreview !== null && !previewHost.hidden) {
+      ensurePreview()?.render(previewTime(), previewSlots.map((slot) => slot.frame));
+    } else {
+      ensureGallery()?.render({
+        projectedAngle: state.projectedAngle,
+        rollDegrees: state.roll,
+      }, rows.map((row) => row.frame));
+    }
+  };
+
+  const tick = (timestamp) => {
+    if (state.lastTimestamp === null) state.lastTimestamp = timestamp;
+    const elapsed = Math.min(0.10, (timestamp - state.lastTimestamp) / 1000);
+    state.lastTimestamp = timestamp;
+    state.accumulator += elapsed;
+    while (state.accumulator >= 0.02 && rows[0].instance) {
+      state.accumulator -= 0.02;
+      state.time += 0.02;
+      const previousRoll = state.roll;
+      const previousFlipDegrees = state.projectedAngle * 360;
+      if (autoEnabled(rollAutoButton)) {
+        state.roll = Math.sin(state.time * 0.76) * 175;
+        rollInput.value = String(Math.round(state.roll));
+      }
+      if (autoEnabled(flipAutoButton)) {
+        state.projectedAngle = (state.time * 0.29) % 1;
+        flipInput.value = String(Math.round(state.projectedAngle * 360));
+      }
+      if (autoEnabled(rollAutoButton) || autoEnabled(flipAutoButton)) {
+        const motionDegrees = shortestDegreesDelta(previousRoll, state.roll)
+          + shortestDegreesDelta(previousFlipDegrees, state.projectedAngle * 360);
+        applyPoseActivity(motionDegrees, 0.86);
+      } else if (state.activityMode === "motion") {
+        state.activityPercent *= 0.92;
+        if (state.activityPercent < 0.1) state.activityPercent = 0;
+      }
+      if (autoEnabled(rollAutoButton) || autoEnabled(flipAutoButton) || state.activityMode === "motion") {
+        updateLabels();
+      }
+      const selected = selection();
+      const started = performance.now();
+      if (selected.kind === "wasm") {
+        rows.forEach((row) => {
+          row.instance.exports.update();
+          assert(row.instance.exports.memory.buffer.byteLength <= 4096, `P${selected.pageIndex + 1}E${row.index + 1} exceeded 4096-byte memory ceiling`);
+        });
+      } else {
+        selected.effects.forEach((effect, index) => {
+          window.CreatorClub3D.renderThemeEffect(effect.id, state, state.time, rows[index].frame);
+        });
+      }
+      updatePreviewFrames();
+      state.updateSamples.push(performance.now() - started);
+      if (state.updateSamples.length > 250) state.updateSamples.shift();
+    }
+    if (timestamp - state.lastRenderTimestamp >= FRAME_INTERVAL) {
+      state.lastRenderTimestamp = timestamp;
+      renderRows();
+    }
+    if (rows[0].instance && Math.floor(timestamp / 500) !== Math.floor((timestamp - elapsed * 1000) / 500)) {
+      const selected = selection();
+      const sorted = [...state.updateSamples].sort((a, b) => a - b);
+      const p95 = sorted[Math.floor(sorted.length * 0.95)] || 0;
+      runtimeLine.textContent = selected.kind === "wasm"
+        ? `Ready · exact ${state.moduleBytes.toLocaleString()} / 16,000 bytes · 8 live 3D effects · one shared renderer · 50 Hz · WASM p95 ${p95.toFixed(3)} ms`
+        : `Web Studio sketch · ${selected.effects.length} live 3D effects · browser only · render p95 ${p95.toFixed(3)} ms`;
+    }
+    window.requestAnimationFrame(tick);
+  };
+
+  const boot = async () => {
+    try {
+      const binary = Uint8Array.from(atob(WASM_BASE64), (character) => character.charCodeAt(0));
+      state.moduleBytes = binary.length;
+      assert(binary.length <= 16000, `module is ${binary.length} bytes`);
+      const module = await WebAssembly.compile(binary);
+      const imports = WebAssembly.Module.imports(module).map((item) => `${item.module}.${item.name}`);
+      assert(imports.every((name) => name.startsWith("arduino.")), `unsupported import: ${imports.join(", ")}`);
+      for (const row of rows) {
+        const instance = await WebAssembly.instantiate(module, { arduino: makeArduino(row) });
+        row.instance = instance;
+        assert(instance.exports.memory.buffer.byteLength <= 4096, "initial WASM memory exceeds 4096 bytes");
+        row.phase = "init";
+        instance.exports.init();
+        assert(row.initHardwareCalls.length === 0, `P1E${row.index + 1} init touched hardware: ${row.initHardwareCalls.join(", ")}`);
+        row.phase = "running";
+      }
+      for (const slot of previewSlots) {
+        const instance = await WebAssembly.instantiate(module, {
+          arduino: makeArduino(slot, slot.sensor),
+        });
+        slot.instance = instance;
+        assert(instance.exports.memory.buffer.byteLength <= 4096, "preview WASM memory exceeds 4096 bytes");
+        slot.phase = "init";
+        instance.exports.init();
+        assert(slot.initHardwareCalls.length === 0, `Preview club ${slot.index} init touched hardware: ${slot.initHardwareCalls.join(", ")}`);
+        slot.phase = "running";
+      }
+      selectPage();
+      state.time += 0.02;
+      rows.forEach((row) => {
+        row.instance.exports.update();
+        assert(row.imuEnabled === 1, `E${row.index + 1} first update did not enable IMU`);
+      });
+      previewSlots.forEach((slot) => {
+        slot.instance.exports.update();
+        assert(slot.imuEnabled === 1, `Preview club ${slot.index} first update did not enable IMU`);
+      });
+      syncPreviewSelection();
+      updatePreviewFrames();
+      renderRows();
+      const selected = selection();
+      runtimeLine.textContent = selected.kind === "wasm"
+        ? `Ready · exact ${binary.length.toLocaleString()} / 16,000 bytes · 8 live 3D effects · one shared renderer · 50 Hz`
+        : `Web Studio sketch · ${selected.effects.length} live 3D effects · browser only, not yet on the club`;
+    } catch (error) {
+      runtimeLine.classList.add("is-error");
+      runtimeLine.textContent = `Emulator error: ${error.message}`;
+    }
+  };
+
+  updateLabels();
+  selectPage();
+  boot();
+  window.requestAnimationFrame(tick);
+})();
+</script>

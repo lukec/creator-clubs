@@ -1,0 +1,8 @@
+# Generated standalone viewers embed upstream Three.js shader text verbatim.
+# Preserve those deployable bytes without treating upstream shader spacing as a
+# project whitespace defect.
+/studies/bento-juggle-player/index.html whitespace=-trailing-space,-space-before-tab
+/studies/club-lighting-lab/index.html whitespace=-trailing-space,-space-before-tab
+/studies/motion-lab-v6-emulator/index.html whitespace=-trailing-space,-space-before-tab
+/studies/police-pattern-lab/index.html whitespace=-trailing-space,-space-before-tab
+/studies/passing-lab/passing-four-count-stage.iife.js whitespace=-trailing-space,-space-before-tab

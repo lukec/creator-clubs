@@ -1,0 +1,4 @@
+interface:
+  display_name: "Control BenTo"
+  short_description: "Create, load, inspect, and preview BenTo shows"
+  default_prompt: "Use $control-bento to create or update a .bento show, load it in BenTo, and run a verified preview."

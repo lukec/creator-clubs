@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "study_id": "club-lab-v0",
+  "cartridge": "club-lab-study-v0",
+  "questions": ["visibility", "controllability", "delight", "verdict"],
+  "patterns": [
+    {
+      "id": "orientation-wheel",
+      "movement_prompt": "Slowly roll the club around its long axis, then make a few juggling-style rotations."
+    },
+    {
+      "id": "orbit-comet",
+      "movement_prompt": "Roll the club around its long shaft; look for a controllable moving highlight without losing its silhouette."
+    },
+    {
+      "id": "activity-flame",
+      "movement_prompt": "Compare stillness, a slow swing, and vigorous safe movement."
+    },
+    {
+      "id": "spin-heat",
+      "movement_prompt": "Compare slow and fast end-over-end rotations; look for repeatable cool-to-hot response."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "cartridge_id": "club-lab-study-v0",
+  "artifact_name": "club-lab-study.wasm",
+  "installed_control_transport": "physical-button-next-pattern",
+  "set_param_status": "export-present-but-host-command-unavailable-on-factory-stable-1.2.0",
+  "parameter_contract": {
+    "0": "pattern_index",
+    "1": "activity_floor",
+    "2": "activity_ceiling",
+    "3": "activity_curve",
+    "4": "attack_gain",
+    "5": "release_gain",
+    "6": "projected_angle_offset",
+    "7": "projected_angle_direction",
+    "8": "visibility_floor",
+    "9": "peak_brightness",
+    "10": "palette_index",
+    "11": "spatial_speed"
+  },
+  "defaults": {
+    "activity_floor": 0.005976,
+    "activity_ceiling": 0.552491,
+    "activity_curve": 0.65,
+    "attack_gain": 0.34,
+    "release_gain": 0.12,
+    "projected_angle_offset": 0.0,
+    "projected_angle_direction": 1.0,
+    "visibility_floor": 0.55,
+    "peak_brightness": 1.0,
+    "palette_index": 0,
+    "spatial_speed": 1.0
+  },
+  "patterns": [
+    {"index": 0, "id": "orientation-wheel", "sensor": "projected-angle"},
+    {"index": 1, "id": "orbit-comet", "sensor": "roll"},
+    {"index": 2, "id": "activity-flame", "sensor": "activity"},
+    {"index": 3, "id": "spin-heat", "sensor": "derived-angular-speed"}
+  ]
+}

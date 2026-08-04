@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+python="$repo_root/private/pio-venv/bin/python"
+
+if [ ! -x "$python" ]; then
+  printf 'Club Lab environment is missing: %s\n' "$python" >&2
+  exit 2
+fi
+
+exec "$python" "$repo_root/tools/club_lab.py" "$@"
