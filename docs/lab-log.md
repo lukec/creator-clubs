@@ -62,6 +62,11 @@ four held/two airborne at mid-pass, and two left-hand selfs on beat six. A
 separate public five-person star canary showed five performers, fifteen clubs,
 and five airborne throws. Browser diagnostics were empty.
 
+**GitHub source result:** commit `036fdc2` contains the compiler, model/page
+integration, generated bundle, tests, and this documentation. It is pushed on
+`codex/store-project-source`; the comparison is
+<https://github.com/lukec/creator-clubs/compare/main...codex/store-project-source>.
+
 ## 2026-08-04 PDT — full 40-effect Motion Lab V6 local canary preflight
 
 **Question:** prepare the larger all-pattern Motion Lab program for one Club A

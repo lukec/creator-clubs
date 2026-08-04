@@ -43,6 +43,12 @@ five-person star reported five performers, fifteen clubs, and five airborne
 throws. Neither public canary produced browser errors. No club, firmware,
 BenTo show, or device setting changed.
 
+**GitHub source:** implementation commit `036fdc2` is pushed on
+`codex/store-project-source`. The review comparison remains
+<https://github.com/lukec/creator-clubs/compare/main...codex/store-project-source>;
+the public `clubs` repository contains the compiler, models, page, generated
+bundle, tests, and documentation together.
+
 ## 2026-08-04 PDT local result: full 40-effect Motion Lab V6 is canary-ready, not installed
 
 Luke asked to prepare the larger all-pattern program on one club before any
