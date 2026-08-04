@@ -56,8 +56,10 @@ files. One redundant local BenTo snapshot inside a private-owned show directory
 contains device-specific network identity and therefore remains outside the
 public candidate. A repository scan found no credential-shaped values or exact
 device/network identifiers in the public commit candidate. The complete source
-set is being published on a review branch so the existing `main` history remains
-easy to inspect before merge.
+set is committed as `6795afb` and pushed to
+`codex/store-project-source`. The branch comparison is
+<https://github.com/lukec/creator-clubs/compare/main...codex/store-project-source>;
+`main` remains unchanged pending review/merge.
 
 ## 2026-08-04 PDT result: direct Throw buttons and all-pattern Passing Lab 3D are public
 

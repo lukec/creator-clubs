@@ -92,6 +92,13 @@ file; the same candidate list was then parsed successfully with Node's native
 JSON parser. `git diff --check` is clean. The separate `clubs-private` checkout
 is clean and synchronized with its remote default branch.
 
+**GitHub result:** substantive commit `6795afb` adds the complete bounded public
+source set and is pushed on `codex/store-project-source`. The comparison is
+<https://github.com/lukec/creator-clubs/compare/main...codex/store-project-source>.
+No draft pull request was opened because Luke asked for committed GitHub storage
+but did not ask to start a PR review; the pushed comparison is ready when he
+wants to merge it.
+
 ## 2026-08-04 PDT — direct Throw controls and one 3D surface for every Passing Lab card
 
 **Question:** replace Glow Lab's Throw dropdown with tap-ready buttons, remove
