@@ -29,6 +29,18 @@ test("Passing Lab respects declared exceptional allocations and deterministic re
   assert.equal(inventoryTokens(pattern).length, pattern.clubCount);
 });
 
+test("PPS launches only the hand declared by its compiled six-beat execution plan", () => {
+  const pattern = getPassingPattern("pps");
+  assert.equal(pattern.loopBeats, 6);
+  for (let beat = 0; beat < pattern.loopBeats; beat += 1) {
+    const sample = sampleInventory(pattern, beat + 0.5);
+    assert.equal(sample.airborne.length, 2);
+    sample.airborne.forEach((club) => {
+      assert.equal(club.hand, pattern.events.find((event) => event.beat === beat && event.juggler === club.juggler).hand);
+    });
+  }
+});
+
 test("Passing Lab transport retains Sky/Earth/Pass and snaps accurately between beats", () => {
   const pattern = getPassingPattern("two-count");
   assert.equal(cueAtPlayhead(pattern, -2).name, "Sky");

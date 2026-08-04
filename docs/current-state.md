@@ -2,6 +2,47 @@
 
 Last updated: 2026-08-04 PDT
 
+## 2026-08-04 PDT result: PPS now executes a compiled alternating-hand pattern
+
+Luke reported that PPS visually left both jugglers holding clubs rather than
+performing the pattern. The visible symptom had two verified model causes: the
+authored three-beat `P P S` row restarted on the right hand at its loop seam,
+and token playback silently selected any held club when the declared throwing
+hand was empty. The generic stage also labelled a scheduled event airborne
+during its hand-connected load and catch phases.
+
+Passing patterns now compile into validated execution plans before playback.
+For normal patterns the compiler requires an explicit action for every
+performer/beat, creates an opposite-hand continuation when the notation cycle
+is not hand-periodic, and derives the safe initial per-hand inventory. Playback
+strictly consumes the declared hand. The pattern page passes the compiled
+object into a catalogue-independent generic 3D executor; pattern IDs no longer
+drive generic animation logic. PPS therefore executes the six-beat sequence
+`P-right, P-left, S-right, P-left, P-right, S-left` for both jugglers.
+
+The 3D sample now separates the current instruction from actual club state. At
+mid-flight PPS shows four held and two airborne clubs; during forward load or
+catch return all six are truthfully hand-connected while the two active throws
+remain identified. The previously requested inward/upward belly-region release
+and wider catch lane remain in the shared gesture.
+
+**Verified local state:** `npm --prefix tools/web-sim test` passes 93/93 and the
+Passing bundle rebuild succeeds. The tests feed all 48 compiled pattern objects
+through the generic executor and cover every PPS beat at load, flight, and
+catch phases. Desktop browser sampling showed both simultaneous passes and
+selfs; a five-person star showed five performers, fifteen clubs, and five
+airborne throws. The 390x844 PPS view remained usable, and all checks reported
+no browser errors.
+
+**Verified publication:** Pages commit `c64c6e7` reached status `built`. The
+cache-busted public page, bundle, library, playback, generic model, and new
+compiler at <https://luk.ec/passing-lab/?v=c64c6e7> match the staged bytes.
+Public mobile-browser sampling verified PPS load at six held/zero airborne,
+mid-pass at four held/two airborne, and the beat-six left-hand selfs; the
+five-person star reported five performers, fifteen clubs, and five airborne
+throws. Neither public canary produced browser errors. No club, firmware,
+BenTo show, or device setting changed.
+
 ## 2026-08-04 PDT local result: full 40-effect Motion Lab V6 is canary-ready, not installed
 
 Luke asked to prepare the larger all-pattern program on one club before any

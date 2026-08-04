@@ -14,7 +14,10 @@ test("the all-pattern 3D stage replaces the initial 2D canvas while semantic sta
   );
   assert.doesNotMatch(page, /<canvas id="stage"/, "there is no initial 2D diagram surface");
   assert.match(page, /function hasThreeStage\(\)/, "every playable card is routed through the shared 3D stage capability");
-  assert.match(page, /schedule-driven 3D stage/, "non-dedicated cards are labelled honestly");
+  assert.match(page, /compiled-pattern 3D executor/, "non-dedicated cards identify the shared compiled executor");
+  assert.match(page, /card supplies a compiled execution plan/, "the page describes the pattern-data to executor boundary");
+  assert.match(page, /renderer\.render\(physicalPlayhead, \{ pattern, camera:/, "the page feeds the selected compiled pattern object into the model");
+  assert.match(page, /sample\.activeEvents \|\| sample\.airborne/, "the current beat remains visible during load, flight, and catch phases");
   assert.match(page, /Every playable pattern uses the shared 3D stage/, "the transport no longer advertises a 2D fallback");
   assert.match(page, /id="timeline-position"/, "the visible transport status remains below the stage");
   assert.match(page, /\$\('#stage-description'\)\.textContent =/, "the semantic description remains populated during playback");

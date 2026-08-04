@@ -8,7 +8,7 @@
 </style>
 <main>
   <header class="topline"><div><h1>Passing <em>Lab</em></h1><p class="lead">A neutral-club passing viewer for learning structures at a jam. The active pattern stays in view; Stage Lab remains the separate composed-stage tool.</p></div><div class="top-controls"><label class="filter-label" for="club-colour">Club colour</label><select id="club-colour" aria-label="Neutral club colour"><option value="#f4f1e8">Chalk white</option><option value="#dedbd2">Warm ivory</option><option value="#bcc1c8">Soft silver</option></select></div></header>
-  <p class="notice">V1 is a curated starter set, not an exhaustive catalogue. Schedules are original declarative data; source-backed cards and schedule studies are labelled separately.</p>
+  <p class="notice">V1 is a curated starter set, not an exhaustive catalogue. Each card supplies declarative pattern data to the shared compiler and 3D executor; source-backed cards and original schedule studies are labelled separately.</p>
   <section class="workspace">
     <div class="viewer-wrap" id="active-viewer">
       <section class="viewer" aria-label="Active passing pattern viewer">
@@ -22,7 +22,7 @@
   </section>
 </main>
 <span id="copy-status" class="sr-only" role="status"></span>
-<script src="./passing-four-count-stage.iife.js?build=all-patterns-3d-v17-midline-release"></script>
+<script src="./passing-four-count-stage.iife.js?build=compiled-pattern-v18"></script>
 <script type="module">
 import { PASSING_COMING_NEXT, PASSING_PATTERNS, eventsAtBeat, getPassingPattern, passingStateFromHash, passingStateHash } from "../../tools/web-sim/src/passing-library.mjs";
 import { COUNT_IN_BEATS, advancePlayhead, clampPlayhead, cueAtPlayhead, sampleInventory, stepPlayhead } from "../../tools/web-sim/src/passing-playback.mjs";
@@ -48,7 +48,7 @@ let threeStageFailure = '';
 function setHash() { history.replaceState(null, '', location.pathname + passingStateHash(state)); }
 
 function isPhysicalTwoPersonFoundation() { return selectFourCount3DPattern(pattern.id).supported; }
-function hasThreeStage() { return Boolean(globalThis.PassingFourCount3D?.isSupported?.(pattern.id)) && !threeStageFailure; }
+function hasThreeStage() { return Boolean(globalThis.PassingFourCount3D?.isSupported?.(pattern)) && !threeStageFailure; }
 function activeTempoBpm() { return isPhysicalTwoPersonFoundation() ? FOUR_COUNT_3D_BASE_BPM : pattern.tempo; }
 function physicalTempoLabel() { return `${FOUR_COUNT_3D_BASE_BPM.toFixed(1)} BPM derived 1×`; }
 function timelinePlayhead() { return hasThreeStage() ? (physicalPlayhead < 0 ? physicalPlayhead : physicalPlayhead % pattern.loopBeats) : playhead; }
@@ -69,10 +69,10 @@ function ensureFourCountStage() {
 function updatePlaybackContext() {
   if (hasThreeStage()) {
     const dedicated = isPhysicalTwoPersonFoundation();
-    $('#stage-status').textContent = `${pattern.title}: ${dedicated ? 'dedicated physical' : 'schedule-driven'} 3D stage active. Playback and current cue controls are below the stage.`;
+    $('#stage-status').textContent = `${pattern.title}: ${dedicated ? 'dedicated physical' : 'compiled-pattern'} 3D stage active. Playback and current cue controls are below the stage.`;
     $('#timeline-help').textContent = dedicated
       ? `The ${pattern.title} phrase repeats while the physical six-club state continues. The hand carries a pass upward and inward to a belly-button-height release; the receiver catches in a wider outside lane. Left/Right use sampled participant eye positions. At 1×, timing is derived from the Earth-gravity path; 0.25× and 0.5× are deliberate slow motion. Scrubbing pauses playback.`
-      : `The ${pattern.title} declarative event schedule drives the shared 3D juggler and club model. Throws load upward toward the body midline and arrive in a wider catch lane. This is a schedule visualization, not the validated physical biomechanics model used by the canonical two-person counts. Performer views use the 3D model camera. Scrubbing pauses playback.`;
+      : `The ${pattern.title} card supplies a compiled execution plan to the shared 3D juggler and club model. The executor follows declared throw hands, catch hands, targets, throw kinds, spin counts, and formation positions. Throws load upward toward the body midline and arrive in a wider catch lane. Pattern-specific data may refine technique or placement; the animation engine does not branch on this card's ID. Performer views use the 3D model camera. Scrubbing pauses playback.`;
     $('#speed-label').textContent = dedicated ? `Speed (${physicalTempoLabel()})` : `Speed (${pattern.tempo} BPM)`;
     $('#speed').setAttribute('aria-label', dedicated ? `Playback speed from a ${physicalTempoLabel()} physical base` : `Playback speed from the declared ${pattern.tempo} BPM tempo`);
     return;
@@ -118,7 +118,11 @@ function setPatternText() {
   $('#pattern-kicker').textContent = `${pattern.peopleCount} people · ${pattern.formation} · ${pattern.difficulty} · ${pattern.basis}`;
   $('#pattern-title').textContent = pattern.title; $('#pattern-summary').textContent = pattern.summary;
   const tempoFact = isPhysicalTwoPersonFoundation() ? physicalTempoLabel() : `${pattern.tempo} BPM`;
-  $('#facts').textContent = `${pattern.clubCount} declared clubs · ${tempoFact} · ${pattern.loopBeats}-beat loop · ${pattern.terminology} · ${isPhysicalTwoPersonFoundation() ? 'dedicated physical 3D foundation' : 'schedule-driven 3D stage'}`;
+  const plan = pattern.executionPlan;
+  const cycleFact = plan?.handPeriodMultiplier > 1
+    ? `${plan.sourceLoopBeats}-beat notation → ${pattern.loopBeats}-beat alternating-hand cycle`
+    : `${pattern.loopBeats}-beat execution cycle`;
+  $('#facts').textContent = `${pattern.clubCount} declared clubs · ${tempoFact} · ${cycleFact} · ${pattern.terminology} · ${isPhysicalTwoPersonFoundation() ? 'dedicated physical 3D foundation' : 'compiled-pattern 3D executor'}`;
   const holder = $('#provenance'); holder.replaceChildren(document.createTextNode(pattern.provenance.summary));
   if (pattern.provenance.references.length) { holder.append(document.createElement('br')); pattern.provenance.references.forEach((reference, index) => { if (index) holder.append(' · '); const link = document.createElement('a'); link.href = reference.url; link.target = '_blank'; link.rel = 'noreferrer'; link.textContent = reference.title; holder.append(link); }); if (pattern.provenance.references.some((reference) => reference.url.includes('modernpassing.com'))) holder.append(document.createElement('br'), 'Modern Passing teaching material: CC BY 4.0 attribution; Passing Lab wording and event data are independently authored.'); }
 }
@@ -126,6 +130,7 @@ function setPatternText() {
 function updateTransportDom(sample) {
   const physical = sample.physical === true;
   const handConnected = sample.handConnected || sample.held;
+  const activeEvents = physical ? sample.airborne : (sample.activeEvents || sample.airborne);
   const cue = sample.cue;
   const timelineDetail = cue.name === 'Pass' ? `Pass · ${cue.detail}` : `${cue.name} · beat ${cue.beat}`;
   const timelineStatus = cue.name === 'Pass' ? `Pass · beat ${cue.beat + 1} / ${pattern.loopBeats}` : `${cue.name} · count-in`;
@@ -140,15 +145,16 @@ function updateTransportDom(sample) {
   const describe = (entry) => physical
     ? `${personName(entry.sourcePersonId)} ${entry.hand}-hand ${entry.kind}${entry.kind === 'pass' ? ` to ${personName(entry.targetPersonId)} ${entry.catchHand} hand` : ''}`
     : `${personName(entry.juggler)} ${entry.hand}-hand ${entry.kind}${entry.kind === 'pass' ? ` to ${personName(entry.target)} ${entry.catchHand} hand` : ''}`;
-  const noFlightDetail = physical
-    ? (sample.playhead < 0 ? 'Count-in clubs remain hand-connected.' : 'All clubs remain hand-connected during this load or return.')
-    : 'Count-in clubs remain held.';
-  $('#stage-description').textContent = `${pattern.title}. ${physical ? 'Detailed physical 3D six-club foundation. ' : 'Schedule-driven 3D stage. '}${cue.name}. ${physical ? `${sample.airborne.length} clubs are in flight and ${handConnected.length} are hand-connected` : `${sample.held.length} held and ${sample.airborne.length} airborne clubs`}, ${sample.total} declared clubs total. ${sample.airborne.length ? sample.airborne.map(describe).join('; ') : noFlightDetail}`;
+  const noFlightDetail = sample.playhead < 0
+    ? (physical ? 'Count-in clubs remain hand-connected.' : 'Count-in clubs remain held.')
+    : (physical ? 'All clubs remain hand-connected during this load or return.' : 'No club is airborne during this load or catch phase.');
+  const eventDetail = activeEvents.length ? activeEvents.map(describe).join('; ') : noFlightDetail;
+  $('#stage-description').textContent = `${pattern.title}. ${physical ? 'Detailed physical 3D six-club foundation. ' : 'Compiled-pattern 3D executor. '}${cue.name}. ${physical ? `${sample.airborne.length} clubs are in flight and ${handConnected.length} are hand-connected` : `${sample.held.length} held and ${sample.airborne.length} airborne clubs`}, ${sample.total} declared clubs total. ${eventDetail}`;
   const list = $('#event-list'); list.replaceChildren();
-  if (!sample.airborne.length) list.textContent = physical
+  if (!activeEvents.length) list.textContent = physical
     ? (sample.playhead < 0 ? 'Count-in: clubs remain hand-connected.' : 'All clubs are hand-connected during this load or return.')
     : 'Count-in: clubs remain held.';
-  else sample.airborne.forEach((entry) => { const chip = document.createElement('span'); chip.className = `event ${entry.kind}`; chip.textContent = physical ? `${personName(entry.sourcePersonId)} ${entry.hand} → ${entry.catchHand} · ${entry.kind}${entry.kind === 'pass' ? ` → ${personName(entry.targetPersonId)}` : ''}` : `${personName(entry.juggler)} ${entry.hand} → ${entry.catchHand} · ${entry.kind}${entry.kind === 'pass' ? ` → ${personName(entry.target)}` : ''}`; list.append(chip); });
+  else activeEvents.forEach((entry) => { const chip = document.createElement('span'); chip.className = `event ${entry.kind}`; chip.textContent = physical ? `${personName(entry.sourcePersonId)} ${entry.hand} → ${entry.catchHand} · ${entry.kind}${entry.kind === 'pass' ? ` → ${personName(entry.targetPersonId)}` : ''}` : `${personName(entry.juggler)} ${entry.hand} → ${entry.catchHand} · ${entry.kind}${entry.kind === 'pass' ? ` → ${personName(entry.target)}` : ''}`; list.append(chip); });
 }
 
 function selectPattern(id, options = {}) {
@@ -160,7 +166,7 @@ function selectPattern(id, options = {}) {
 function renderCurrentStage() {
   if (hasThreeStage()) {
     const renderer = ensureFourCountStage();
-    if (renderer) return renderer.render(physicalPlayhead, { patternId: pattern.id, camera: cameraMode, clubColour: state.club });
+    if (renderer) return renderer.render(physicalPlayhead, { pattern, camera: cameraMode, clubColour: state.club });
   }
   return sampleInventory(pattern, playhead);
 }

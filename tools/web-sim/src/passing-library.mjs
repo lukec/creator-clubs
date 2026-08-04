@@ -1,3 +1,5 @@
+import { compilePassingPattern, oppositePassingHand } from "./passing-pattern-compiler.mjs";
+
 export const PASSING_LIBRARY_VERSION = 1;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -10,15 +12,14 @@ const DEFAULT_COUNT_IN = freeze([
 ]);
 
 const performer = (id, name, x, z, facing) => freeze({ id, name, x, z, facing });
-const oppositeHand = (hand) => hand === "left" ? "right" : "left";
 const event = (beat, juggler, hand, kind, target, options = {}) => freeze({
   beat, juggler, hand, kind, target: target || null,
   // `hand` is the throwing hand. Keeping the receiving hand explicit makes the
   // event useful to a renderer without inferring a camera-relative catch.
-  catchHand: options.catchHand || oppositeHand(hand),
+  catchHand: options.catchHand || oppositePassingHand(hand),
   path: options.path || (kind === "pass" ? "straight" : "self"),
   flightBeats: options.flightBeats ?? 1,
-  spins: options.spins ?? 1,
+  spins: options.spins ?? (kind === "pass" ? 1.5 : 1),
   startPose: options.startPose || "side-head-down",
   catchPose: options.catchPose || "shoulder-club-up",
   note: options.note || "",
@@ -45,7 +46,7 @@ function facingPair(id, title, sequence, summary, terminology, difficulty = "eas
     kind === "pass" ? people[1 - personIndex].id : person.id,
     { path: kind === "pass" ? "straight" : "self" },
   )));
-  return freeze({
+  return compilePassingPattern({
     id, title, peopleCount: 2, formation: "facing pair", clubCount: 6,
     summary, tempo: 108, loopBeats: sequence.length, performers: people, events,
     countIn: DEFAULT_COUNT_IN,
@@ -57,7 +58,7 @@ function facingPair(id, title, sequence, summary, terminology, difficulty = "eas
 function round(id, title, count, positions, summary, options = {}) {
   const people = positions.map((position, index) => performer(`p${index + 1}`, `P${index + 1}`, ...position));
   const events = people.map((person, index) => event(0, person.id, index % 2 ? "right" : "left", "pass", people[(index + 1) % people.length].id, { path: "crossing" }));
-  return freeze({
+  return compilePassingPattern({
     id, title, peopleCount: count, formation: `${count}-person round`, clubCount: count * 3,
     summary, tempo: 100, loopBeats: 1, performers: people, events, countIn: DEFAULT_COUNT_IN,
     terminology: options.terminology || "one-count round", difficulty: options.difficulty || "medium", basis: options.basis || "original schedule study", startingPhase: options.startingPhase || "synchronised",
@@ -75,7 +76,7 @@ const FIVE_PEOPLE = freeze([
 const token = (kind, target, hand, options = {}) => ({ kind, target, hand, ...options });
 function scheduledPattern({ id, title, people, formation, clubCount, tempo = 100, rows, summary, terminology, difficulty = "medium", basis = "original schedule study", references = [], startingPhase = "documented convention", inventoryAllocation, inventoryMode }) {
   const events = rows.flatMap((row, beat) => Object.entries(row).map(([juggler, item]) => event(beat, juggler, item.hand, item.kind, item.target || juggler, { path: item.path || (item.kind === "pass" ? "straight" : "self"), note: item.note || "", flightBeats: item.flightBeats, spins: item.spins, catchHand: item.catchHand })));
-  return freeze({ id, title, peopleCount: people.length, formation, clubCount, summary, tempo, loopBeats: rows.length, performers: people, events: freeze(events), countIn: DEFAULT_COUNT_IN, terminology, difficulty, basis, startingPhase, inventoryAllocation, inventoryMode, provenance: provenance(basis === "source-backed" ? "Original event schedule based on independently researched timing facts; no source prose, diagrams, graphics, code, or bulk data copied." : "Original explicit schedule study. It is a reviewable convention, not a claim of a canonical published start.", references) });
+  return compilePassingPattern({ id, title, peopleCount: people.length, formation, clubCount, summary, tempo, loopBeats: rows.length, performers: people, events: freeze(events), countIn: DEFAULT_COUNT_IN, terminology, difficulty, basis, startingPhase, inventoryAllocation, inventoryMode, provenance: provenance(basis === "source-backed" ? "Original event schedule based on independently researched timing facts; no source prose, diagrams, graphics, code, or bulk data copied." : "Original explicit schedule study. It is a reviewable convention, not a claim of a canonical published start.", references) });
 }
 function ringPattern({ id, title, people, formation, sequence, step = 1, summary, terminology, difficulty = "medium", basis = "original schedule study", references = [] }) {
   const rows = sequence.map(({ kind, hand }, beat) => Object.fromEntries(people.map((person, index) => [person.id, token(kind, kind === "pass" ? people[(index + step + people.length) % people.length].id : person.id, hand || ((beat + index) % 2 ? "right" : "left"), { path: kind === "pass" ? (Math.abs(step) > 1 ? "crossing" : "straight") : "self" })])));
@@ -118,7 +119,7 @@ export const PASSING_PATTERNS = freeze([
   facingPair("three-count-left", "3-count · left-start practice", [{ kind: "pass", hand: "left" }, { kind: "self", hand: "right" }, { kind: "self", hand: "left" }, { kind: "pass", hand: "right" }, { kind: "self", hand: "left" }, { kind: "self", hand: "right" }], "A start-phase practice variation of the waltz schedule.", "3-count practice variation", "medium", "original schedule study"),
   facingPair("four-count-left", "4-count · left-start practice", [{ kind: "pass", hand: "left" }, { kind: "self", hand: "right" }, { kind: "self", hand: "left" }, { kind: "self", hand: "right" }], "A start-phase practice variation of Every Others.", "4-count practice variation", "easy", "original schedule study"),
   facingPair("pps-left", "PPS · left-start practice", [{ kind: "pass", hand: "left" }, { kind: "pass", hand: "right" }, { kind: "self", hand: "left" }], "A start-phase practice variation of PPS.", "PPS practice variation", "medium", "original schedule study"),
-  freeze({
+  compilePassingPattern({
     id: "v-feed-2-4", title: "V feed — 2-count / 4-count", peopleCount: 3, formation: "V", clubCount: 9,
     summary: "Canonical three-person feed clock: Feeder exchanges with Receiver A, then enters Receiver B two beats later while the other receiver self-throws.",
     tempo: 92, loopBeats: 4, performers: V_PEOPLE,
@@ -133,7 +134,7 @@ export const PASSING_PATTERNS = freeze([
     terminology: "V formation; 2-count / 4-count feed", difficulty: "medium", basis: "source-backed", startingPhase: "synchronised documented feed start",
     provenance: provenance("Original schedule transcription from independently researched timing facts; no source diagrams or prose copied.", [terminologySources[1], terminologySources[2]]),
   }),
-  freeze({
+  compilePassingPattern({
     id: "stage-v-opening", title: "Stage V opening — visual variant", peopleCount: 3, formation: "V", clubCount: 3,
     summary: "The established Stage Lab opening: two feeds to Receiver A while Receiver B self-throws left/right, then the feeder alternates targets.",
     tempo: 92, loopBeats: 4, performers: V_PEOPLE, events: V_EVENTS, countIn: DEFAULT_COUNT_IN,

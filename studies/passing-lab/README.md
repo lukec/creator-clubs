@@ -9,6 +9,7 @@ Run a local HTTP server from the repository root and visit
 - `studies/passing-lab/index.html`
 - `studies/passing-lab/passing-four-count-stage.iife.js`
 - `tools/web-sim/src/passing-library.mjs`
+- `tools/web-sim/src/passing-pattern-compiler.mjs`
 - `tools/web-sim/src/passing-playback.mjs`
 - `tools/web-sim/src/passing-four-count-3d.mjs`
 - `tools/web-sim/src/passing-generic-3d.mjs`
@@ -19,11 +20,20 @@ The generated IIFE contains Three.js, the neutral club geometry, and the
 `npm --prefix tools/web-sim run build` when its source changes, then deploy the
 page, bundle, and listed modules together with their existing relative paths.
 
-The library's internal truth is a versioned declarative event schedule. Every
+The library's authored truth is a versioned declarative event schedule. Every
 event specifies beat, juggler, hand, self/pass/hold role, target, path,
 flight/spin, and throw/catch poses. It also records a Sky/Earth/Pass start
 convention. Siteswap or Prechac labels can be added later, but are not used as
 the rendering model.
+
+`passing-pattern-compiler.mjs` turns that authored schedule into the execution
+truth consumed by playback. It validates explicit actions and performers,
+extends a non-hand-periodic notation cycle with its opposite-hand continuation,
+and derives a safe initial club allocation for each hand. The page passes that
+compiled pattern object to the stage; the generic model has no catalogue import
+and no per-pattern-ID animation branches. Technique, route, and placement
+exceptions belong in the pattern data unless they justify a separately
+validated physical sampler.
 
 V1 contains twelve playable cards in each 2-, 3-, 4-, and 5-person section.
 The catalogue distinguishes **source-backed** timing/terminology cards from
@@ -58,11 +68,16 @@ and Reset replay of Sky/Earth/Pass.
 
 `passing-playback.mjs` makes the declared `clubCount` visible rather than
 treating it as metadata only. Each sampled frame contains unique club tokens:
-a self/pass event selects a token from the thrower's declared hand first, the
-event token is airborne, and all remaining tokens are rendered held at
-hand/side positions. The helper asserts that held plus airborne tokens equal
-the card's declared inventory, so scrubbing is deterministic and does not add
-unrelated props merely to make a formation look full.
+a self/pass event must select a token from the thrower's declared hand, and all
+remaining tokens are rendered held at hand/side positions. The helper asserts
+that held plus airborne tokens equal the card's declared inventory, so
+scrubbing is deterministic and does not add unrelated props merely to make a
+formation look full.
+
+The current beat's instruction remains active through its load, flight, and
+catch phases, but the sampled physical state calls a club airborne only between
+release and catch. This distinction prevents the inventory and accessibility
+text from claiming that a hand-connected club is already in flight.
 
 Most cards declare three clubs per person. Two explicit data exceptions remain
 visible rather than being normalised away: the retained Stage V opening is a
@@ -87,12 +102,41 @@ to each person.  Every token carries a self or scheduled pass into its next
 event three beats later; nothing is parked merely to make the formation look
 full.  Sky starts from the low ready side as a whole-arm carry, Earth lowers
 the carry together, and Pass begins the visible hand-connected load before
-ballistic release. The other 44 cards use a separate schedule-driven 3D
-adapter: it renders their declared people, formation, target routes, and entire
+ballistic release. The other 44 cards use the compiled-pattern 3D executor: it
+renders their declared people, formation, target routes, and entire
 club inventory, but does not claim the detailed model's physical/collision
 coverage.
 
-### Current viewer revision: v17 all-pattern 3D and midline pass release
+### Current viewer revision: v18 compiled pattern execution
+
+The selected card is now compiled before playback and fed to the generic model
+as an object. PPS exposes the important result: its authored three-beat `P P S`
+notation becomes a six-beat alternating-hand execution cycle rather than
+restarting on the right hand after beat three. Both jugglers perform two
+passes and a self, then the opposite-hand continuation. Strict token ownership
+prevents the executor from hiding an invalid hand schedule by borrowing any
+held club.
+
+The generic 3D sample reports `activeEvents` separately from actual `airborne`
+clubs. A PPS mid-flight sample contains four held and two airborne clubs;
+forward-load and catch-return samples contain all six hand-connected while the
+current beat still identifies the two actions. Pass events use the declared
+1.5 spins; self events use their declared one spin.
+
+All 48 cards accept the same compiled-object interface. The 93-test web suite
+covers compiler validation, periodic hand allocation, exact inventory, all six
+PPS beats at load/flight/catch phases, and finite samples for every catalogue
+card. Local rendered QA covered PPS on desktop and a 390x844 phone viewport,
+plus a five-person star with five performers, fifteen persistent clubs, and
+five simultaneous throws; no browser errors appeared.
+
+Pages commit `c64c6e7` is built and publicly verified at
+<https://luk.ec/passing-lab/?v=c64c6e7>. Cache-busted public bytes match the
+staged page, bundle, library, playback, generic model, and compiler. Public
+mobile sampling repeated the PPS load/mid-flight/beat-six checks and the
+five-person star inventory check without browser errors.
+
+### Prior viewer revision: v17 all-pattern 3D and midline pass release
 
 The initial Canvas 2D diagram has been removed. One Three.js stage is mounted
 from the first frame and switches between the detailed two-person foundation
@@ -183,8 +227,8 @@ biomechanics.
 
 Local validation passes the focused physical suite (18/18), the full
 `web-sim` suite (85/85), build, and diff check.  Browser review confirms one
-host-owned WebGL stage for each of the four accepted cards, PPS's clean 2D
-fallback, 0.25× audience/participant-eye pass scrubs, and responsive 390×844
+host-owned WebGL stage for each of the four accepted cards, the then-existing
+PPS 2D fallback, 0.25× audience/participant-eye pass scrubs, and responsive 390×844
 portrait / 844×390 landscape layouts without console diagnostics.  The
 participant view keeps real limbs in the scene rather than duplicating a HUD
 arm, so the own hands/near club sit at the working edge when an eye-level view

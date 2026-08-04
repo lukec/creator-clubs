@@ -17,6 +17,8 @@ test("Passing Lab stores events, poses, count-in, and target roles explicitly", 
   assert.equal(pattern.events[0].startPose, "side-head-down");
   assert.equal(pattern.events[0].catchPose, "shoulder-club-up");
   assert.equal(pattern.events[0].catchHand, "left", "the event model records the receiver hand instead of relying on a camera inference");
+  assert.equal(pattern.events[0].spins, 1.5, "pass spin count is declarative input to the executor");
+  assert.equal(pattern.executionPlan.handFlow, "periodic", "library cards expose validated execution plans");
 });
 
 test("Passing Lab share state is constrained to a known pattern and neutral club colour", () => {

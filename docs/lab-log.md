@@ -3,6 +3,65 @@
 Append dated experiments and results. Preserve negative results; they narrow the
 problem and prevent repeated work.
 
+## 2026-08-04 PDT — compile PPS notation into executable club/hand state
+
+**Question:** fix the visibly incorrect PPS card, and establish an architecture
+where the pattern page supplies declarative pattern data to reusable juggler
+models instead of accumulating per-pattern animation code.
+
+**Verified defect:** PPS authored three synchronous beats, pass-right,
+pass-left, self-right, and then wrapped directly to pass-right. That cycle is
+not periodic by hand: the correct continuation begins pass-left. Playback's
+`chooseThrownToken` then hid the invalid seam by falling back to the first held
+club when the declared hand had none. The generic sampler separately copied
+scheduled launches into its `airborne` report even during the pre-release load
+and post-catch return, which made diagnostics disagree with the rendered pose.
+
+**Implementation:** added `passing-pattern-compiler.mjs`. It validates explicit
+performer actions, hands, targets, beat slots, and periodic hand flow. When an
+authored notation cycle is not hand-periodic it appends a mirrored-hand
+continuation. It also derives a minimum safe initial club count per performer
+hand from the complete cycle. The normal token ledger now refuses wrong-hand
+fallback. `passing-generic-3d.mjs` accepts only compiled pattern objects and
+does not import the library; the page passes its selected object through the
+shared stage. Event spin counts now drive rotation. `activeEvents` and actual
+held/airborne club state are exposed separately.
+
+**PPS result:** the authored three-beat `P P S` notation compiles to six beats:
+right pass, left pass, right self, left pass, right pass, left self. Both
+jugglers act on every beat. At phase 0.5 each beat has two genuinely airborne
+clubs; at phase 0.1 both clubs remain connected through the inward/upward load,
+and at phase 0.9 they are connected through the wider catch return.
+
+**Failed path:** making token selection strict before deriving per-hand initial
+inventory exposed a real failure in `directed-triangle-waltz`: performer B
+needs two right-hand clubs before receiving another, while the old alternating
+initial presentation assigned only one. Retaining the fallback would merely
+hide that schedule demand. The compiler's prefix-demand calculation now gives
+each pattern the per-hand allocation it actually needs, after which all 48
+patterns execute without fallback. During browser QA, changing only the URL
+fragment retained the already-running document and did not re-run initial
+pattern parsing; a full cache-busted navigation loaded the five-person canary.
+
+**Validation:** the web suite passes 93/93 and the IIFE rebuild succeeds.
+Regressions cover all 48 compiled objects, compiler rejection of incomplete
+rows, PPS's six explicit hand/kind rows, strict persistent inventory, truthful
+load/flight/catch state, and midline-release/outside-catch geometry. Rendered
+desktop QA scrubbed PPS passes and selfs; a five-person star reported five
+performers, fifteen clubs, and five airborne events. A 390x844 PPS pass remained
+usable. Browser diagnostics were empty. This is a schematic shared executor,
+not a collision- or biomechanics-validated simulator; the four canonical
+two-person physical cards remain the narrower validated override.
+
+**Publication:** only the `passing-lab/` target was staged in the Pages
+repository. Commit `c64c6e7` reached Pages status `built`. Cache-busted public
+responses for the HTML, IIFE, library, playback, generic model, and compiler
+matched the staged files byte for byte. On the public 390x844 page, PPS showed
+six held/zero airborne during load while retaining both active pass events,
+four held/two airborne at mid-pass, and two left-hand selfs on beat six. A
+separate public five-person star canary showed five performers, fifteen clubs,
+and five airborne throws. Browser diagnostics were empty.
+
 ## 2026-08-04 PDT — full 40-effect Motion Lab V6 local canary preflight
 
 **Question:** prepare the larger all-pattern Motion Lab program for one Club A

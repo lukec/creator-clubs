@@ -12,11 +12,48 @@ The system should make the smallest useful slice work before embedded firmware
 changes: detect one club, log its sensors, control its LEDs, then add mappings,
 multiple clubs, cues, and optional visual tracking.
 
-## Passing Lab: one 3D surface, two explicit model contracts
+## Passing Lab: compile pattern data, then execute it
 
 Passing Lab has one visible playback surface: the shared Three.js stage. It is
 mounted from the first frame for every playable card; there is no provisional
 Canvas 2D diagram and therefore no 2D-to-3D swap when a card is selected.
+
+The generic path is a compiler/executor pipeline rather than a catalogue of
+animations:
+
+```text
+pattern card in passing-library.mjs
+  -> passing-pattern-compiler.mjs validates and completes the hand period
+  -> executionPlan plus explicit events
+  -> passing-playback.mjs assigns and moves persistent club tokens
+  -> passing-generic-3d.mjs samples hands, clubs, paths, and spin
+  -> passing-four-count-stage.mjs renders the sampled state
+```
+
+The page passes the selected compiled pattern object into the stage. The
+generic model does not import the catalogue, inspect a pattern ID, or contain a
+PPS branch. It reads performer positions, throw/catch hands, target, pass/self
+kind, spin count, and timing from the compiled data. Pattern-specific teaching
+information should therefore be represented as data for technique, placement,
+or route overrides. A dedicated sampler is justified only when a narrower
+pattern family has materially stronger physical/anatomical validation.
+
+The compiler requires one explicit action per performer per beat for normal
+patterns and rejects unknown performers, hands, targets, actions, or duplicate
+beat slots. A notation cycle that is not hand-periodic is followed by its
+opposite-hand continuation. This is why the three-symbol PPS notation `P P S`
+executes as six throws: `P-right, P-left, S-right, P-left, P-right, S-left`.
+The compiler derives the minimum safe initial allocation per hand from the
+whole execution cycle. Playback then throws only the token actually present in
+the declared hand; it cannot quietly borrow from the other hand. The retained
+non-conserving Stage V visual study is explicitly exempt and remains labelled
+`visual-study`.
+
+An active event is not the same as an airborne club. During the first part of a
+beat the hand and club are still connected in the upward/inward load; during
+the final part they are connected in the catch return. Samples expose both the
+active instruction and the actual held/airborne state so UI, accessibility,
+and runtime diagnostics remain truthful.
 
 That presentation contract must not erase the difference between two data
 contracts:
@@ -25,7 +62,7 @@ contracts:
   two-person 1-, 2-, 3-, and 4-count cards. It owns the six persistent clubs,
   Earth-gravity timing, seam grips, articulated arms, collision checks, and
   participant-eye cameras.
-- `sampleGenericPassing3D` is the schedule-driven adapter for the other 44
+- `sampleGenericPassing3D` is the compiled-pattern executor for the other 44
   cards. It owns exact declared inventory, formation coordinates, event
   targets, pass/self paths, articulated visual gestures, and performer camera
   placement. It does not claim biomechanical or collision validation.

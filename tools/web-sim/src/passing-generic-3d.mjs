@@ -1,7 +1,6 @@
-import { getPassingPattern } from "./passing-library.mjs";
 import { sampleInventory } from "./passing-playback.mjs";
 
-export const GENERIC_PASSING_3D_VERSION = 1;
+export const GENERIC_PASSING_3D_VERSION = 2;
 export const GENERIC_PASSING_3D_TIMING = Object.freeze({ release: 0.20, catch: 0.80 });
 export const GENERIC_PASSING_3D_GESTURE = Object.freeze({
   readySideMetres: 0.50,
@@ -119,10 +118,15 @@ const catchGrip = (person, hand) => handAnchor(person, hand, {
 });
 const balanceForGrip = (grip, direction) => add(grip, scale(normalize(direction, DOWN), GENERIC_PASSING_3D_GESTURE.gripFromBalanceMetres));
 
-export function genericPassingGesture(patternId, eventIndex = 0) {
-  const pattern = getPassingPattern(patternId);
+const requireCompiledPattern = (pattern) => {
+  if (!pattern?.id || !Array.isArray(pattern.events) || !pattern.executionPlan) throw new TypeError("compiled passing pattern required");
+  return pattern;
+};
+
+export function genericPassingGesture(compiledPattern, eventIndex = 0) {
+  const pattern = requireCompiledPattern(compiledPattern);
   const event = pattern.events[eventIndex];
-  if (!event) throw new RangeError(`${patternId} has no event ${eventIndex}`);
+  if (!event) throw new RangeError(`${pattern.id} has no event ${eventIndex}`);
   const people = formationPeople(pattern);
   const source = personById(people, event.juggler);
   const target = personById(people, event.target || event.juggler);
@@ -196,7 +200,9 @@ function clubPoseForEvent(event, people, phase) {
   const targetReady = readyGrip(target, event.catchHand);
   const releaseQuaternion = quaternionForDirection(DOWN, source.forward);
   const isPass = event.kind === "pass";
-  const spinRadians = isPass ? GENERIC_PASSING_3D_GESTURE.passSpinRadians : GENERIC_PASSING_3D_GESTURE.selfSpinRadians;
+  const spinRadians = Number.isFinite(Number(event.spins))
+    ? Number(event.spins) * Math.PI * 2
+    : isPass ? GENERIC_PASSING_3D_GESTURE.passSpinRadians : GENERIC_PASSING_3D_GESTURE.selfSpinRadians;
   const horizontal = normalize(vector(catcher.x - release.x, 0, catcher.z - release.z), source.forward);
   const axis = normalize(cross(horizontal, UP), source.right);
   if (phase <= GENERIC_PASSING_3D_TIMING.release) {
@@ -232,8 +238,8 @@ function cameraFor(people, mode) {
   return freeze({ id: "audience", viewKind: "audience", ownerPersonId: null, position: freeze(vector(0, 2.55, 7.4 + depth)), target: freeze(vector(0, 0.98, 0)), fov: 31 });
 }
 
-export function sampleGenericPassing3D(patternId, playheadBeats, { camera = "audience" } = {}) {
-  const pattern = getPassingPattern(patternId);
+export function sampleGenericPassing3D(compiledPattern, playheadBeats, { camera = "audience" } = {}) {
+  const pattern = requireCompiledPattern(compiledPattern);
   const playhead = Math.max(-2, Number.isFinite(Number(playheadBeats)) ? Number(playheadBeats) : -2);
   const normalizedPlayhead = playhead < 0 ? playhead : mod(playhead, pattern.loopBeats);
   const inventory = sampleInventory(pattern, normalizedPlayhead);
@@ -277,25 +283,29 @@ export function sampleGenericPassing3D(patternId, playheadBeats, { camera = "aud
     return freeze({ ...event, sourcePersonId: event.juggler, targetPersonId: event.target, ...pose, position: freeze(pose.position), direction: freeze(pose.direction), quaternion: freeze(pose.quaternion), holder: pose.holder ? freeze(pose.holder) : null });
   });
   const clubs = freeze([...heldClubs, ...eventClubs]);
-  if (clubs.length !== pattern.clubCount || new Set(clubs.map((club) => club.id)).size !== clubs.length) throw new RangeError(`${patternId}: generic 3D inventory must remain unique and complete`);
-  if (clubs.some((club) => !finiteVector(club.position) || ![club.quaternion.x, club.quaternion.y, club.quaternion.z, club.quaternion.w].every(Number.isFinite))) throw new RangeError(`${patternId}: generic 3D pose must stay finite`);
+  if (clubs.length !== pattern.clubCount || new Set(clubs.map((club) => club.id)).size !== clubs.length) throw new RangeError(`${pattern.id}: generic 3D inventory must remain unique and complete`);
+  if (clubs.some((club) => !finiteVector(club.position) || ![club.quaternion.x, club.quaternion.y, club.quaternion.z, club.quaternion.w].every(Number.isFinite))) throw new RangeError(`${pattern.id}: generic 3D pose must stay finite`);
+  const airborne = freeze(clubs.filter((club) => club.state === "airborne"));
+  const handConnected = freeze(clubs.filter((club) => club.state !== "airborne"));
   return freeze({
     version: GENERIC_PASSING_3D_VERSION,
-    patternId,
+    patternId: pattern.id,
     physical: false,
     threeD: true,
-    model: "schedule-driven-3d",
+    model: "compiled-pattern-3d",
+    executionPlan: pattern.executionPlan,
     playhead: normalizedPlayhead,
     cue: inventory.cue,
     camera: cameraFor(people, camera),
     clubs,
-    held: inventory.held,
-    airborne: inventory.airborne,
-    handConnected: freeze(clubs.filter((club) => club.state !== "airborne")),
+    held: handConnected,
+    airborne,
+    handConnected,
+    activeEvents: inventory.airborne,
     people,
     allocation: inventory.allocation,
     mode: inventory.mode,
     total: clubs.length,
-    collision: freeze({ minimumClearanceMetres: Infinity, method: "not evaluated for schedule-driven 3D" }),
+    collision: freeze({ minimumClearanceMetres: Infinity, method: "not evaluated by compiled-pattern 3D" }),
   });
 }

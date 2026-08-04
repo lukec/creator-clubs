@@ -26,6 +26,16 @@ end-over-end quaternion rotation per throw, and a down-pointing front-to-rear
 hand carry between throws. The fixed audience camera is behind `setView()` so a
 future movable view stays out of the motion and effect code.
 
+Passing Lab uses a data-to-motion pipeline. `passing-library.mjs` supplies
+authored events, `passing-pattern-compiler.mjs` validates them and completes
+their alternating-hand execution period, `passing-playback.mjs` maintains
+strict persistent club ownership, and `passing-generic-3d.mjs` samples the
+compiled object without importing the catalogue or branching on pattern IDs.
+`passing-four-count-stage.mjs` is the reusable Three.js renderer for that
+sample. Pattern-specific teaching differences should normally be data; the
+separate physical two-person sampler remains a deliberately narrower validated
+override.
+
 `setFrames()` accepts either one 32-RGB frame, which it clones across all three
 clubs, or three explicit frames. The current studies pass one frame. The
 renderer owns no animation loop and draws one opaque shell per club; the host

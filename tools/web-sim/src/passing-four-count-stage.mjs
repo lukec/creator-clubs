@@ -374,9 +374,9 @@ export function createPassingFourCountStage({ mount, ariaLabel = "True 3D six-cl
 
   const render = (playheadBeats, options = {}) => {
     if (disposed) return lastSample;
-    const requestedPattern = options.patternId || activePattern;
-    const capability = selectFourCount3DPattern(requestedPattern);
-    activePattern = requestedPattern;
+    const requestedPattern = options.pattern || getPassingPattern(options.patternId || activePattern);
+    const capability = selectFourCount3DPattern(requestedPattern.id);
+    activePattern = requestedPattern.id;
     if (options.camera) updateCamera(options.camera);
     if (options.clubColour && options.clubColour !== clubColour) {
       clubColour = options.clubColour;
@@ -385,7 +385,7 @@ export function createPassingFourCountStage({ mount, ariaLabel = "True 3D six-cl
     resize();
     const sample = capability.supported
       ? sampleSelectedPassing3D(activePattern, playheadBeats, { camera: selectedCamera })
-      : sampleGenericPassing3D(activePattern, playheadBeats, { camera: selectedCamera });
+      : sampleGenericPassing3D(requestedPattern, playheadBeats, { camera: selectedCamera });
     const visiblePeople = new Set(sample.people.map((person) => person.id));
     people.forEach((rig, personId) => { rig.root.visible = visiblePeople.has(personId); });
     sample.people.forEach(updatePerson);
@@ -398,15 +398,15 @@ export function createPassingFourCountStage({ mount, ariaLabel = "True 3D six-cl
       club.group.visible = true;
     });
     const cameraDefinition = applyCamera(sample);
-    const activePatternTitle = getPassingPattern(sample.patternId).title;
+    const activePatternTitle = requestedPattern.title;
     renderer.domElement.setAttribute(
       "aria-label",
       sample.physical
         ? `${activePatternTitle}: detailed physical 3D six-club passing stage`
-        : `${activePatternTitle}: schedule-driven 3D stage with ${sample.people.length} performers and ${sample.total} clubs`,
+        : `${activePatternTitle}: compiled-pattern 3D stage with ${sample.people.length} performers and ${sample.total} clubs`,
     );
     renderer.domElement.dataset.activePattern = sample.patternId;
-    renderer.domElement.dataset.stageModel = sample.physical ? "dedicated-physical-3d" : "schedule-driven-3d";
+    renderer.domElement.dataset.stageModel = sample.physical ? "dedicated-physical-3d" : sample.model;
     renderer.domElement.dataset.clubCount = String(sample.total);
     renderer.domElement.dataset.clubMeshCount = String(sample.total * PASSING_FOUR_COUNT_MESH_POLICY.clubMeshParts.length);
     renderer.domElement.dataset.performerCount = String(sample.people.length);
@@ -500,8 +500,8 @@ globalThis.PassingFourCount3D = freeze({
   // Every playable card has a Three.js stage. Four canonical facing-pair cards
   // retain the narrower validated physical sampler; the rest use the explicit
   // declarative schedule adapter.
-  isSupported: (patternId) => {
-    try { sampleGenericPassing3D(patternId, -2); return true; } catch { return false; }
+  isSupported: (patternOrId) => {
+    try { sampleGenericPassing3D(typeof patternOrId === "string" ? getPassingPattern(patternOrId) : patternOrId, -2); return true; } catch { return false; }
   },
   isDedicatedPhysical: (patternId) => selectFourCount3DPattern(patternId).supported,
   revision: THREE.REVISION,

@@ -29,15 +29,20 @@ export function initialClubAllocation(pattern) {
 }
 
 export function inventoryTokens(pattern) {
-  return freeze(initialClubAllocation(pattern).flatMap(({ personId, count }) => Array.from({ length: count }, (_, index) => freeze({
-    id: `${personId}-club-${index + 1}`,
-    homePersonId: personId,
-    personId,
-    // The slot is a presentation cue. A launcher selects its declared throw
-    // hand first; additional held clubs fan out from that hand/side position.
-    hand: index % 2 ? "right" : "left",
-    index,
-  }))));
+  return freeze(initialClubAllocation(pattern).flatMap(({ personId, count }) => {
+    const compiled = pattern.executionPlan?.initialHandAllocation?.[personId];
+    const hands = compiled
+      ? [...Array(compiled.left).fill("left"), ...Array(compiled.right).fill("right")]
+      : Array.from({ length: count }, (_, index) => index % 2 ? "right" : "left");
+    if (hands.length !== count) throw new RangeError(`${pattern.id}: compiled hand allocation does not match ${personId}'s declared inventory`);
+    return hands.map((hand, index) => freeze({
+      id: `${personId}-club-${index + 1}`,
+      homePersonId: personId,
+      personId,
+      hand,
+      index,
+    }));
+  }));
 }
 
 export function clampPlayhead(pattern, value) {
@@ -68,10 +73,10 @@ function groupedTokens(tokens, performers) {
   return new Map(performers.map((person) => [person.id, tokens.filter((token) => token.personId === person.id).map((token) => ({ ...token }))]));
 }
 
-function chooseThrownToken(held, hand) {
+function chooseThrownToken(held, hand, allowFallback = false) {
   const handIndex = held.findIndex((token) => token.hand === hand);
-  const index = handIndex >= 0 ? handIndex : 0;
-  return held.splice(index, 1)[0];
+  if (handIndex >= 0) return held.splice(handIndex, 1)[0];
+  return allowFallback ? held.splice(0, 1)[0] : undefined;
 }
 
 function completedBeat(pattern, heldByPerson, beat) {
@@ -79,7 +84,7 @@ function completedBeat(pattern, heldByPerson, beat) {
   eventsAtBeat(pattern, beat).forEach((entry) => {
     if (entry.kind === "hold") return;
     const held = heldByPerson.get(entry.juggler);
-    const token = chooseThrownToken(held, entry.hand);
+    const token = chooseThrownToken(held, entry.hand, pattern.inventoryMode === "visual-study");
     if (!token) throw new RangeError(`${pattern.id}: ${entry.juggler} has no club available for beat ${beat + 1}`);
     arrivals.push({ ...token, personId: entry.target, hand: entry.catchHand });
   });
@@ -110,7 +115,7 @@ export function sampleInventory(pattern, playhead) {
   const launches = launchesAtPlayhead(pattern, clamped);
   const airborne = launches.map((entry) => {
     const held = heldByPerson.get(entry.juggler);
-    const token = chooseThrownToken(held, entry.hand);
+    const token = chooseThrownToken(held, entry.hand, mode === "visual-study");
     if (!token) throw new RangeError(`${pattern.id}: ${entry.juggler} has no club available for displayed beat ${(beat ?? 0) + 1}`);
     return freeze({ ...entry, id: token.id, tokenId: token.id, sourcePersonId: entry.juggler });
   });
