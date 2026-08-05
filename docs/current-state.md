@@ -6,11 +6,10 @@ Last updated: 2026-08-04 PDT
 
 Luke clarified that this is a solo project and does not need a standing review
 branch workflow. The four completed source/publication commits were verified as
-a clean fast-forward from `main`; they are now part of local `main`. The final
-GitHub step is to push `main`, then remove the temporary
-`codex/store-project-source` branch locally and remotely. Future completed work
-for this repository should stay together on `main` unless Luke explicitly asks
-for an isolated branch.
+a clean fast-forward from `main`; they are now part of local and remote `main`.
+The temporary `codex/store-project-source` branch was deleted locally and on
+GitHub. Future completed work for this repository should stay together on
+`main` unless Luke explicitly asks for an isolated branch.
 
 ## 2026-08-04 PDT result: PPS now executes a compiled alternating-hand pattern
 

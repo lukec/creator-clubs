@@ -16,9 +16,10 @@ advanced local `main` from `782356c` through `2a12968` without a merge commit,
 history rewrite, or conflict. Documentation references to the temporary compare
 branch were updated before the final push/deletion.
 
-**Final action:** push the resulting `main`, verify it matches `origin/main`,
-then delete `codex/store-project-source` locally and remotely. This is source
-control only; no page, club, firmware, BenTo show, or device setting changes.
+**Final result:** the resulting `main` was pushed and verified equal to
+`origin/main`. `codex/store-project-source` was then deleted locally and
+remotely; branch enumeration showed only local/remote `main`. This was source
+control only; no page, club, firmware, BenTo show, or device setting changed.
 
 ## 2026-08-04 PDT — compile PPS notation into executable club/hand state
 
