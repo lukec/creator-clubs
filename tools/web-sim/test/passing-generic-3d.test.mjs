@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { PASSING_PATTERNS, eventsAtBeat, getPassingPattern } from "../src/passing-library.mjs";
 import {
+  GENERIC_PASSING_3D_BODY_PATH_POLICY,
   GENERIC_PASSING_3D_GESTURE,
   GENERIC_PASSING_3D_TIMING,
   genericPassingGesture,
@@ -11,6 +12,15 @@ import {
 
 const dot = (left, right) => left.x * right.x + left.y * right.y + left.z * right.z;
 const subtract = (left, right) => ({ x: left.x - right.x, y: left.y - right.y, z: left.z - right.z });
+const horizontalDistanceToSegment = (point, start, end) => {
+  const deltaX = end.x - start.x;
+  const deltaZ = end.z - start.z;
+  const lengthSquared = deltaX ** 2 + deltaZ ** 2;
+  const progress = lengthSquared > 1e-12
+    ? Math.max(0, Math.min(1, ((point.x - start.x) * deltaX + (point.z - start.z) * deltaZ) / lengthSquared))
+    : 0;
+  return Math.hypot(point.x - (start.x + deltaX * progress), point.z - (start.z + deltaZ * progress));
+};
 
 test("every catalogue pattern can be fed directly into the compiled-pattern 3D executor", () => {
   PASSING_PATTERNS.forEach((pattern) => {
@@ -25,6 +35,45 @@ test("every catalogue pattern can be fed directly into the compiled-pattern 3D e
         assert.ok([club.position.x, club.position.y, club.position.z].every(Number.isFinite));
         assert.ok([club.quaternion.x, club.quaternion.y, club.quaternion.z, club.quaternion.w].every(Number.isFinite));
       });
+      assert.ok(sample.collision.minimumClearanceMetres >= GENERIC_PASSING_3D_BODY_PATH_POLICY.requiredCentrelineClearanceMetres, `${pattern.id} keeps compiled pass centrelines outside the body guard`);
+    });
+  });
+});
+
+test("every compiled pass leaves and enters the front of its actors without crossing a body centreline", () => {
+  PASSING_PATTERNS.forEach((pattern) => {
+    const sample = sampleGenericPassing3D(pattern, -2);
+    pattern.events.forEach((event, eventIndex) => {
+      if (event.kind !== "pass") return;
+      const gesture = genericPassingGesture(pattern, eventIndex);
+      const route = subtract(gesture.target.position, gesture.source.position);
+      const incoming = subtract(gesture.source.position, gesture.target.position);
+      const releaseLane = subtract(gesture.releaseGrip, gesture.source.position);
+      const catchLane = subtract(gesture.catchGrip, gesture.target.position);
+      assert.ok(dot(route, gesture.source.forward) > 0, `${pattern.id}:${event.juggler}->${event.target} target is in front of source`);
+      assert.ok(dot(incoming, gesture.target.forward) > 0, `${pattern.id}:${event.juggler}->${event.target} source is in front of receiver`);
+      assert.ok(dot(releaseLane, gesture.source.forward) > 0, `${pattern.id}:${event.juggler} releases in front of the torso`);
+      assert.ok(dot(catchLane, gesture.target.forward) > 0, `${pattern.id}:${event.target} catches in front of the torso`);
+      sample.people.forEach((person) => {
+        assert.ok(
+          horizontalDistanceToSegment(person.position, gesture.releaseGrip, gesture.catchGrip) >= GENERIC_PASSING_3D_BODY_PATH_POLICY.requiredCentrelineClearanceMetres,
+          `${pattern.id}:${event.juggler}->${event.target} clears ${person.id}'s body centreline`,
+        );
+      });
+    });
+  });
+});
+
+test("rendered local -Z fronts and participant cameras use the compiled actor frame", () => {
+  PASSING_PATTERNS.forEach((pattern) => {
+    const audience = sampleGenericPassing3D(pattern, 0.5);
+    audience.people.forEach((person) => {
+      const renderedForward = { x: -Math.sin(person.visualYawRadians), y: 0, z: -Math.cos(person.visualYawRadians) };
+      assert.ok(Math.abs(renderedForward.x - person.forward.x) < 1e-12, `${pattern.id}:${person.id} rendered x-facing matches the model`);
+      assert.ok(Math.abs(renderedForward.z - person.forward.z) < 1e-12, `${pattern.id}:${person.id} rendered z-facing matches the model`);
+      const firstPerson = sampleGenericPassing3D(pattern, 0.5, { camera: person.id });
+      const gaze = subtract(firstPerson.camera.target, firstPerson.camera.position);
+      assert.ok(dot(gaze, person.forward) > 3, `${pattern.id}:${person.id} first-person camera looks along the actor frame`);
     });
   });
 });

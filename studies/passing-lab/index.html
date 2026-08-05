@@ -22,11 +22,11 @@
   </section>
 </main>
 <span id="copy-status" class="sr-only" role="status"></span>
-<script src="./passing-four-count-stage.iife.js?build=compiled-pattern-v18"></script>
+<script src="./passing-four-count-stage.iife.js?build=orientation-plan-v19"></script>
 <script type="module">
-import { PASSING_COMING_NEXT, PASSING_PATTERNS, eventsAtBeat, getPassingPattern, passingStateFromHash, passingStateHash } from "../../tools/web-sim/src/passing-library.mjs";
-import { COUNT_IN_BEATS, advancePlayhead, clampPlayhead, cueAtPlayhead, sampleInventory, stepPlayhead } from "../../tools/web-sim/src/passing-playback.mjs";
-import { FOUR_COUNT_3D_BASE_BPM, selectFourCount3DPattern } from "../../tools/web-sim/src/passing-four-count-3d.mjs";
+import { PASSING_COMING_NEXT, PASSING_PATTERNS, eventsAtBeat, getPassingPattern, passingStateFromHash, passingStateHash } from "../../tools/web-sim/src/passing-library.mjs?build=orientation-plan-v19";
+import { COUNT_IN_BEATS, advancePlayhead, clampPlayhead, cueAtPlayhead, sampleInventory, stepPlayhead } from "../../tools/web-sim/src/passing-playback.mjs?build=orientation-plan-v19";
+import { FOUR_COUNT_3D_BASE_BPM, selectFourCount3DPattern } from "../../tools/web-sim/src/passing-four-count-3d.mjs?build=orientation-plan-v19";
 
 const $ = (selector) => document.querySelector(selector);
 const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));

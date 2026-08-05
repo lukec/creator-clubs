@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import test from "node:test";
 
 const pageUrl = new URL("../../../studies/passing-lab/index.html", import.meta.url);
+const sourceUrl = (name) => new URL(`../src/${name}`, import.meta.url);
 
 test("the all-pattern 3D stage replaces the initial 2D canvas while semantic status remains outside it", async () => {
   const page = await fs.readFile(pageUrl, "utf8");
@@ -32,4 +33,17 @@ test("the all-pattern 3D stage replaces the initial 2D canvas while semantic sta
   ].forEach((overlay) => {
     assert.equal(page.includes(overlay), false, `${overlay} must not obscure a physical 3D stage`);
   });
+});
+
+test("the static Passing Lab module graph uses one cache revision", async () => {
+  const revision = "orientation-plan-v19";
+  const files = await Promise.all([
+    fs.readFile(pageUrl, "utf8"),
+    fs.readFile(sourceUrl("passing-library.mjs"), "utf8"),
+    fs.readFile(sourceUrl("passing-playback.mjs"), "utf8"),
+    fs.readFile(sourceUrl("passing-four-count-3d.mjs"), "utf8"),
+    fs.readFile(sourceUrl("passing-generic-3d.mjs"), "utf8"),
+    fs.readFile(sourceUrl("passing-four-count-stage.mjs"), "utf8"),
+  ]);
+  files.forEach((contents) => assert.match(contents, new RegExp(`\\?build=${revision}`)));
 });

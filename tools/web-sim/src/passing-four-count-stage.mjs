@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import { CREATOR_CLUB_DIMENSIONS, makeCreatorClubGeometries } from "./creator-club-geometry.mjs";
-import { getPassingPattern } from "./passing-library.mjs";
+import { getPassingPattern } from "./passing-library.mjs?build=orientation-plan-v19";
 import {
   FOUR_COUNT_3D_PATTERN_ID,
   FOUR_COUNT_3D_SHOULDER_RIG_POLICY,
@@ -9,8 +9,8 @@ import {
   getFourCount3DCamera,
   sampleSelectedPassing3D,
   selectFourCount3DPattern,
-} from "./passing-four-count-3d.mjs";
-import { sampleGenericPassing3D } from "./passing-generic-3d.mjs";
+} from "./passing-four-count-3d.mjs?build=orientation-plan-v19";
+import { sampleGenericPassing3D } from "./passing-generic-3d.mjs?build=orientation-plan-v19";
 
 const METRES_TO_SCENE_UNITS = 10;
 // The desktop stage is wide, but a phone should retain an intelligible pair
@@ -353,9 +353,9 @@ export function createPassingFourCountStage({ mount, ariaLabel = "True 3D six-cl
   const updatePerson = (person) => {
     const rig = people.get(person.id) || addPerson(person);
     rig.root.position.copy(toScene(person.position));
-    // The model's forward vector is partner-derived. Three's local visual
-    // front is -Z, hence this explicitly derived inverse yaw rather than the
-    // historical `headingRadians` sign that made the pair face away.
+    // The model's forward vector comes from the compiler's declared-facing
+    // actor frame. Three's local visual front is -Z, so the model also supplies
+    // the matching yaw instead of making the renderer reinterpret headings.
     rig.root.rotation.y = person.visualYawRadians;
     ["left", "right"].forEach((hand) => {
       const shoulder = toScene(person.shoulders[hand]);

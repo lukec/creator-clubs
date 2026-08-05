@@ -2,6 +2,30 @@
 
 Last updated: 2026-08-05 PDT
 
+## 2026-08-05 PDT result: Passing Lab compiles one front-facing actor frame for every pattern
+
+The generic Passing Lab executor no longer reinterprets formation headings
+with a reversed Z axis. The catalogue convention is now explicit and compiled:
+`0°` faces downstage along `+z`, `90°` faces audience-right along `+x`, and
+positive rotation is around `+y`. The compiler emits normalized forward/right
+frames from each performer's declared placement. Hands, release/catch lanes,
+torso yaw, first-person cameras, and follow-through all consume that same frame.
+No pattern ID branch was added.
+
+The defect affected 118 compiled pass events across 31 of the 44 generic cards;
+the two-person pair headings had hidden it. Compiler validation now rejects
+non-finite placement and any pass that puts either partner behind the other's
+declared facing. The generic sampler also rejects a release-to-catch horizontal
+grip path that approaches any performer centreline within `0.30 m`. This is a
+formation/body-path guard, not full-club biomechanical collision validation.
+
+**Verified local state:** the web suite passes 99/99 and all browser bundles
+rebuild. Rendered slow-playback checks covered the directed triangle, canonical
+V feed, square PPS cross-feed, and five-person star plus triangle first-person
+view. Each formation faced inward, reported its complete inventory, and stayed
+outside the guard; the smallest catalogue clearance is `0.376 m`. A 390x844
+five-person star check had no horizontal overflow or browser diagnostics.
+
 ## 2026-08-05 PDT result: two-page Motion Lab V6 physical evaluation handout is ready
 
 For tonight's physical evaluation, `output/pdf/motion-lab-v6-physical-evaluation.pdf`

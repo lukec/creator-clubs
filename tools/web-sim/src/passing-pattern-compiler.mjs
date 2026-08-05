@@ -1,6 +1,10 @@
-export const PASSING_PATTERN_COMPILER_VERSION = 1;
-
 const freeze = (value) => Object.freeze(value);
+export const PASSING_PATTERN_COMPILER_VERSION = 2;
+export const PASSING_FACING_CONVENTION = freeze({
+  angleUnit: "degrees",
+  zeroDirection: "downstage (+z)",
+  positiveRotation: "toward audience-right (+x) around +y",
+});
 const HANDS = freeze(["left", "right"]);
 const ACTIONS = new Set(["hold", "pass", "self"]);
 
@@ -11,8 +15,44 @@ export const oppositePassingHand = (hand) => {
 
 const handKey = (personId, hand) => `${personId}:${hand}`;
 
+export function passingFacingVector(facingDegrees) {
+  if (!Number.isFinite(facingDegrees)) throw new TypeError(`passing facing must be finite, received ${facingDegrees}`);
+  const headingRadians = facingDegrees * Math.PI / 180;
+  return freeze({ x: Math.sin(headingRadians), y: 0, z: Math.cos(headingRadians) });
+}
+
+function validatePerformers(pattern) {
+  if (!Array.isArray(pattern.performers) || pattern.performers.length === 0) throw new RangeError(`${pattern.id}: at least one performer is required`);
+  const performerIds = new Set();
+  pattern.performers.forEach((person) => {
+    if (typeof person.id !== "string" || person.id.length === 0) throw new RangeError(`${pattern.id}: every performer needs a non-empty ID`);
+    if (performerIds.has(person.id)) throw new RangeError(`${pattern.id}: duplicate performer ${person.id}`);
+    performerIds.add(person.id);
+    if (![person.x, person.z, person.facing].every(Number.isFinite)) throw new RangeError(`${pattern.id}: ${person.id} needs finite x, z, and facing values`);
+  });
+}
+
+function validatePassFacing(pattern, event, performers) {
+  if (event.kind !== "pass") return;
+  if (event.target === event.juggler) throw new RangeError(`${pattern.id}: pass event for ${event.juggler} must target another performer`);
+  const source = performers.get(event.juggler);
+  const target = performers.get(event.target);
+  const deltaX = target.x - source.x;
+  const deltaZ = target.z - source.z;
+  const distance = Math.hypot(deltaX, deltaZ);
+  if (distance <= 1e-9) throw new RangeError(`${pattern.id}: pass ${source.id} to ${target.id} has no horizontal route`);
+  const sourceForward = passingFacingVector(source.facing);
+  const targetForward = passingFacingVector(target.facing);
+  const sourceDot = (sourceForward.x * deltaX + sourceForward.z * deltaZ) / distance;
+  const targetDot = (-targetForward.x * deltaX - targetForward.z * deltaZ) / distance;
+  if (sourceDot <= 1e-9) throw new RangeError(`${pattern.id}: pass ${source.id} to ${target.id} puts the target behind or beside the thrower's declared facing`);
+  if (targetDot <= 1e-9) throw new RangeError(`${pattern.id}: pass ${source.id} to ${target.id} puts the thrower behind or beside the receiver's declared facing`);
+}
+
 function validateEvents(pattern) {
-  const performerIds = new Set(pattern.performers.map((person) => person.id));
+  validatePerformers(pattern);
+  const performers = new Map(pattern.performers.map((person) => [person.id, person]));
+  const performerIds = new Set(performers.keys());
   const occupied = new Set();
   pattern.events.forEach((event) => {
     if (!Number.isInteger(event.beat) || event.beat < 0 || event.beat >= pattern.loopBeats) throw new RangeError(`${pattern.id}: event beat ${event.beat} is outside its loop`);
@@ -20,6 +60,7 @@ function validateEvents(pattern) {
     if (!ACTIONS.has(event.kind)) throw new RangeError(`${pattern.id}: unknown action ${event.kind}`);
     if (!HANDS.includes(event.hand) || !HANDS.includes(event.catchHand)) throw new RangeError(`${pattern.id}: every action needs explicit throw and catch hands`);
     if (event.kind !== "hold" && !performerIds.has(event.target)) throw new RangeError(`${pattern.id}: unknown target ${event.target}`);
+    validatePassFacing(pattern, event, performers);
     const slot = `${event.beat}:${event.juggler}`;
     if (occupied.has(slot)) throw new RangeError(`${pattern.id}: ${event.juggler} has more than one action on beat ${event.beat + 1}`);
     occupied.add(slot);
@@ -31,6 +72,23 @@ function validateEvents(pattern) {
       });
     }
   }
+}
+
+function compileOrientation(pattern) {
+  const performers = freeze(Object.fromEntries(pattern.performers.map((person) => {
+    const forward = passingFacingVector(person.facing);
+    return [person.id, freeze({
+      source: "declared-facing",
+      facingDegrees: person.facing,
+      forward,
+      right: freeze({ x: -forward.z, y: 0, z: forward.x }),
+    })];
+  })));
+  return freeze({
+    source: "declared-performer-facing",
+    convention: PASSING_FACING_CONVENTION,
+    performers,
+  });
 }
 
 function handFlow(pattern, events) {
@@ -126,6 +184,7 @@ export function compilePassingPattern(rawPattern) {
       handPeriodMultiplier,
       handFlow: compiled.inventoryMode === "visual-study" ? "visual-study" : "periodic",
       initialHandAllocation: initialHandAllocation(compiled),
+      orientation: compileOrientation(compiled),
     }),
   });
 }

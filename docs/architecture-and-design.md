@@ -1,6 +1,6 @@
 # Architecture and design
 
-Last updated: 2026-08-04
+Last updated: 2026-08-05
 
 ## Goal
 
@@ -49,6 +49,17 @@ the declared hand; it cannot quietly borrow from the other hand. The retained
 non-conserving Stage V visual study is explicitly exempt and remains labelled
 `visual-study`.
 
+World placement and actor-local orientation have one compiled meaning. Negative
+`x` is audience-left, positive `x` is audience-right, and increasing `z` is
+downstage toward the audience. Facing angles use `0° = +z`, `90° = +x`, with
+positive rotation around `+y`. The compiler converts each declared angle to an
+orthonormal forward/right frame and stores it in `executionPlan.orientation`.
+It rejects non-finite or duplicate performer placement and any pass where the
+target is not in the thrower's front hemisphere or the thrower is not in the
+receiver's. The model consumes that frame for hands, paths, gaze, and a yaw that
+maps the person mesh's local `-Z` front to the same world forward. Neither the
+renderer nor a camera is allowed to reinterpret the angle convention.
+
 An active event is not the same as an airborne club. During the first part of a
 beat the hand and club are still connected in the upward/inward load; during
 the final part they are connected in the catch return. Samples expose both the
@@ -63,14 +74,22 @@ contracts:
   Earth-gravity timing, seam grips, articulated arms, collision checks, and
   participant-eye cameras.
 - `sampleGenericPassing3D` is the compiled-pattern executor for the other 44
-  cards. It owns exact declared inventory, formation coordinates, event
-  targets, pass/self paths, articulated visual gestures, and performer camera
-  placement. It does not claim biomechanical or collision validation.
+  cards. It owns exact declared inventory, formation coordinates and facing,
+  event targets, pass/self paths, articulated visual gestures, and performer
+  camera placement. It enforces a conservative `0.30 m` horizontal grip-path
+  distance from each performer centreline, but does not claim swept-full-club
+  or biomechanical collision validation.
 
 The stage renderer selects between those samplers behind one stable canvas and
 resizes reusable person/club rigs to the current card. Accessibility and
 runtime datasets state which contract is active, so a uniform 3D appearance
 does not turn the generic cards into inferred physical truth.
+
+Passing Lab's static module graph is revisioned as a unit in browser import
+URLs. A compiler-plan schema change must update the page, library, playback,
+generic executor, physical selector, and generated stage bundle together. This
+prevents a returning browser from combining a new executor with a cached old
+pattern object that lacks the required execution-plan fields.
 
 Both contracts use one legible pass vocabulary: ready outside, hand and club
 travel upward/inward together, release near the torso midline at `0.14 m`

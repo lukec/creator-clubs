@@ -3,6 +3,56 @@
 Append dated experiments and results. Preserve negative results; they narrow the
 problem and prevent repeated work.
 
+## 2026-08-05 PDT — compile formation facing once and prevent generic passes through bodies
+
+**Question:** make the remaining Passing Lab cards execute from declarative
+pattern data, with special attention to triangle performers facing and throwing
+through their own bodies, without adding per-pattern animation branches.
+
+**Verified defect:** Passing Lab documents increasing `z` as downstage/toward
+the audience, and its formation headings consistently mean `0° = +z`,
+`90° = +x`, and `180° = -z`. The generic executor instead calculated
+`forward = (sin heading, 0, -cos heading)` and rendered yaw as `-heading`.
+The pair cards' `±90°` headings concealed the Z sign error. Across 332 generic
+pass events, 118 passes in 31 of 44 generic cards put the target behind the
+thrower and the source behind the catcher; 78 were more than 120 degrees
+behind. The old straight grip segments approached a source or receiver body
+centreline within approximately `0.013 m`.
+
+**Implementation:** compiler version 2 validates finite, unique performer
+placement and emits an orientation plan with one normalized forward/right frame
+per declared performer. It rejects a pass when either participant is outside
+the other's front hemisphere. Generic executor version 3 reads only that plan
+for torso yaw, actor-local hand anchors, release/catch points, cameras, and
+follow-through. Three.js local `-Z` is rotated to the compiled forward vector;
+the renderer no longer interprets raw headings itself. A pattern-wide horizontal
+guard measures every compiled release-to-catch grip segment against every
+performer centreline and rejects clearance below `0.30 m`. Versioned module
+imports keep the compiler, catalogue, playback, and stage graph synchronized
+when a previously opened static page is refreshed.
+
+**Validation:** with the corrected convention, all compiled pass partners are
+in front of both participants; the largest partner bearing is 74.4 degrees and
+the smallest horizontal grip-path clearance is `0.376 m`. Regressions cover
+heading cardinal directions, orthonormal actor frames, triangle inward facing,
+mesh-local `-Z` agreement, participant-camera gaze, front release/catch lanes,
+all-event body clearance, and compiler rejection of invalid placement. The
+full web suite passes 99/99, the IIFE rebuild succeeds, and `git diff --check`
+passes. Rendered audience checks at phase 0.5 covered directed triangle,
+canonical V feed, double PPS cross-feed, and five-person star; a triangle A
+first-person check looked into the formation. A 390x844 star check retained all
+five performers, fifteen clubs, five airborne throws, and no horizontal
+overflow. Browser diagnostics were empty.
+
+**Boundary and open pattern questions:** this guard covers the horizontal grip
+centreline, not the detailed swept club or measured human biomechanics owned by
+the four canonical physical two-person cards. The directed triangle's authored
+schedule still gives B two consecutive right-hand actions and declares ten
+clubs, leaving one extra held in this simplified steady-state model. The data's
+`crossing` path label also lacks a documented physical-lane meaning. Those are
+pattern-definition questions for Luke rather than reasons to invent hidden
+per-pattern behavior in the executor.
+
 ## 2026-08-05 PDT — printable two-page Motion Lab V6 physical evaluation sheet
 
 **Question:** create a polished handout for tonight's physical evaluation that

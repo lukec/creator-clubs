@@ -36,6 +36,12 @@ sample. Pattern-specific teaching differences should normally be data; the
 separate physical two-person sampler remains a deliberately narrower validated
 override.
 
+Passing world coordinates use `0° = +z/downstage` and `90° =
++x/audience-right`. Compiler output owns the normalized forward/right actor
+frames; the generic sampler and renderer consume those frames rather than
+reinterpreting headings. Generic passes must keep their horizontal
+release-to-catch grip segment at least `0.30 m` from every performer centreline.
+
 `setFrames()` accepts either one 32-RGB frame, which it clones across all three
 clubs, or three explicit frames. The current studies pass one frame. The
 renderer owns no animation loop and draws one opaque shell per club; the host

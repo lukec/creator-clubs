@@ -49,7 +49,9 @@ in **Coming next** instead of being simulated speculatively.
 
 Audience-view coordinates are explicit in data: negative `x` is audience-left,
 positive `x` audience-right; `z = 0` is upstage/backdrop and larger `z` is
-downstage/toward the audience. Target order is always the event's literal
+downstage/toward the audience. Facing angles use `0° = +z/downstage`,
+`90° = +x/audience-right`, and positive rotation around `+y`. Target order is
+always the event's literal
 `target` ID, not an inferred visual direction. Each pattern has brief factual
 provenance links; no prose, diagrams, graphics, source code, or bulk pattern
 data were copied from those sites. Modern Passing is visibly linked where its
@@ -107,7 +109,29 @@ renders their declared people, formation, target routes, and entire
 club inventory, but does not claim the detailed model's physical/collision
 coverage.
 
-### Current viewer revision: v18 compiled pattern execution
+### Current viewer revision: v19 compiled orientation and body-path guard
+
+The compiler now turns each declared performer heading into one normalized
+actor-local frame before execution. The generic model uses that frame for the
+person mesh, hands, pass release/catch lanes, follow-through, and participant
+camera. Compiler validation rejects non-finite formation data and any pass that
+places either partner behind the other's facing. This fixed one Z-axis sign
+error that had aimed 118 generic pass events across 31 cards behind bodies;
+there is still no per-pattern-ID animation logic.
+
+Every generic pass also has a conservative horizontal check: its
+release-to-catch grip segment must remain at least `0.30 m` from every performer
+centreline. All catalogue passes clear that guard; the minimum is `0.376 m`.
+This is not the detailed full-club/body collision model used by the four
+canonical physical cards. Versioned imports keep the static compiler, catalogue,
+playback, executor, and IIFE schema synchronized across browser caches.
+
+The 99-test suite covers cardinal headings, all actor frames, every pass's
+front hemisphere, rendered local-front agreement, first-person gaze, body-path
+clearance, and finite/inventory sampling for every card. Rendered checks covered
+triangle, V, square, and star formations plus mobile and first-person views.
+
+### Prior viewer revision: v18 compiled pattern execution
 
 The selected card is now compiled before playback and fed to the generic model
 as an object. PPS exposes the important result: its authored three-beat `P P S`

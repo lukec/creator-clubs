@@ -1,7 +1,10 @@
-import { sampleInventory } from "./passing-playback.mjs";
+import { sampleInventory } from "./passing-playback.mjs?build=orientation-plan-v19";
 
-export const GENERIC_PASSING_3D_VERSION = 2;
+export const GENERIC_PASSING_3D_VERSION = 3;
 export const GENERIC_PASSING_3D_TIMING = Object.freeze({ release: 0.20, catch: 0.80 });
+export const GENERIC_PASSING_3D_BODY_PATH_POLICY = Object.freeze({
+  requiredCentrelineClearanceMetres: 0.30,
+});
 export const GENERIC_PASSING_3D_GESTURE = Object.freeze({
   readySideMetres: 0.50,
   readyForwardMetres: 0.32,
@@ -76,9 +79,11 @@ function formationPeople(pattern) {
   const spanZ = Math.max(0.01, Math.max(...rawZ) - Math.min(...rawZ));
   const formationScale = Math.min(0.62, 4.4 / spanX, 2.8 / spanZ);
   return pattern.performers.map((person) => {
-    const headingRadians = person.facing * Math.PI / 180;
-    const forward = normalize(vector(Math.sin(headingRadians), 0, -Math.cos(headingRadians)), vector(0, 0, -1));
-    const right = normalize(cross(forward, UP), vector(1, 0, 0));
+    const orientation = pattern.executionPlan.orientation.performers[person.id];
+    if (!orientation) throw new RangeError(`${pattern.id}: compiled orientation missing performer ${person.id}`);
+    const forward = normalize(vector(orientation.forward.x, orientation.forward.y, orientation.forward.z), vector(0, 0, 1));
+    const right = normalize(vector(orientation.right.x, orientation.right.y, orientation.right.z), cross(forward, UP));
+    const headingRadians = Math.atan2(forward.x, forward.z);
     return {
       id: person.id,
       name: person.name,
@@ -86,7 +91,8 @@ function formationPeople(pattern) {
       forward,
       right,
       headingRadians,
-      visualYawRadians: -headingRadians,
+      visualYawRadians: Math.atan2(-forward.x, -forward.z),
+      orientationSource: orientation.source,
     };
   });
 }
@@ -119,7 +125,7 @@ const catchGrip = (person, hand) => handAnchor(person, hand, {
 const balanceForGrip = (grip, direction) => add(grip, scale(normalize(direction, DOWN), GENERIC_PASSING_3D_GESTURE.gripFromBalanceMetres));
 
 const requireCompiledPattern = (pattern) => {
-  if (!pattern?.id || !Array.isArray(pattern.events) || !pattern.executionPlan) throw new TypeError("compiled passing pattern required");
+  if (!pattern?.id || !Array.isArray(pattern.events) || !pattern.executionPlan?.orientation?.performers) throw new TypeError("compiled passing pattern with an orientation plan required");
   return pattern;
 };
 
@@ -228,6 +234,39 @@ function clubPoseForEvent(event, people, phase) {
   return { position: balanceForGrip(grip, direction), quaternion: progress < 0.5 ? catchQuaternion : quaternionForDirection(direction, target.forward), direction, motionState: "catch-return", state: "held", holder: { personId: target.id, hand: event.catchHand } };
 }
 
+function horizontalDistanceToSegment(point, start, end) {
+  const deltaX = end.x - start.x;
+  const deltaZ = end.z - start.z;
+  const lengthSquared = deltaX ** 2 + deltaZ ** 2;
+  const progress = lengthSquared > 1e-12
+    ? clamp(((point.x - start.x) * deltaX + (point.z - start.z) * deltaZ) / lengthSquared)
+    : 0;
+  return Math.hypot(point.x - mix(start.x, end.x, progress), point.z - mix(start.z, end.z, progress));
+}
+
+function compiledBodyPathClearance(pattern, people) {
+  let closest = null;
+  pattern.events.forEach((event, eventIndex) => {
+    if (event.kind !== "pass") return;
+    const source = personById(people, event.juggler);
+    const target = personById(people, event.target);
+    const release = releaseGrip(source, event.hand);
+    const catcher = catchGrip(target, event.catchHand);
+    people.forEach((person) => {
+      const centrelineDistanceMetres = horizontalDistanceToSegment(person.position, release, catcher);
+      if (!closest || centrelineDistanceMetres < closest.centrelineDistanceMetres) {
+        closest = { eventIndex, sourcePersonId: source.id, targetPersonId: target.id, personId: person.id, centrelineDistanceMetres };
+      }
+    });
+  });
+  return freeze({
+    method: "compiled release-to-catch grip segment against performer centreline in the horizontal plane",
+    requiredClearanceMetres: GENERIC_PASSING_3D_BODY_PATH_POLICY.requiredCentrelineClearanceMetres,
+    minimumClearanceMetres: closest ? closest.centrelineDistanceMetres : Infinity,
+    closest: closest ? freeze(closest) : null,
+  });
+}
+
 function cameraFor(people, mode) {
   if (mode !== "audience") {
     const owner = personById(people, mode);
@@ -245,6 +284,10 @@ export function sampleGenericPassing3D(compiledPattern, playheadBeats, { camera 
   const inventory = sampleInventory(pattern, normalizedPlayhead);
   const phase = normalizedPlayhead < 0 ? 0 : mod(normalizedPlayhead, 1);
   const peopleBase = formationPeople(pattern);
+  const collision = compiledBodyPathClearance(pattern, peopleBase);
+  if (collision.minimumClearanceMetres < collision.requiredClearanceMetres) {
+    throw new RangeError(`${pattern.id}: compiled pass path approaches ${collision.closest.personId}'s body centreline within ${collision.minimumClearanceMetres.toFixed(3)}m`);
+  }
   const handTargets = normalizedPlayhead < 0
     ? new Map(peopleBase.map((person, index) => {
       const progress = countInProgress(normalizedPlayhead, index, peopleBase.length);
@@ -306,6 +349,6 @@ export function sampleGenericPassing3D(compiledPattern, playheadBeats, { camera 
     allocation: inventory.allocation,
     mode: inventory.mode,
     total: clubs.length,
-    collision: freeze({ minimumClearanceMetres: Infinity, method: "not evaluated by compiled-pattern 3D" }),
+    collision,
   });
 }

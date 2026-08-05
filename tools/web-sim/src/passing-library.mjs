@@ -1,4 +1,4 @@
-import { compilePassingPattern, oppositePassingHand } from "./passing-pattern-compiler.mjs";
+import { compilePassingPattern, oppositePassingHand } from "./passing-pattern-compiler.mjs?build=orientation-plan-v19";
 
 export const PASSING_LIBRARY_VERSION = 1;
 
