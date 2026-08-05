@@ -1,6 +1,26 @@
 # Current state
 
-Last updated: 2026-08-04 PDT
+Last updated: 2026-08-05 PDT
+
+## 2026-08-05 PDT result: two-page Motion Lab V6 physical evaluation handout is ready
+
+For tonight's physical evaluation, `output/pdf/motion-lab-v6-physical-evaluation.pdf`
+is a static Letter-landscape, exactly two-page handout generated from the
+authoritative `scenes/motion-lab-v6/effects.json` catalog. It lists only the 40
+on-club V6 candidates - never the browser-only Theme Studio collection - with
+effect ID, name, compact observation prompt, visibility/repeatability ratings,
+Keep/Tune/Drop marks, and a note line for every effect.
+
+Page 1 contains P1 Roll, P2 Flip, and P3 Energy E1-E4. Page 2 explicitly
+continues P3 at E5-E8, then contains P4 Flight and P5 Police. The companion
+generator is `tools/generate_motion_lab_v6_evaluation_sheet.py`; its catalog
+and 20/20 page split assertions prevent silent drift from the on-club program.
+
+**Validation:** Poppler reported exactly two 792 x 612-point Letter-landscape
+pages. PDF parsing confirmed all P1E1 through P5E8 IDs, both partition edges,
+and the Theme Studio exclusion. Both 160-DPI rendered pages were visually
+inspected for clipping, legibility, header/footer presence, write-in space, and
+page-two continuation. No club, firmware, settings, or print action changed.
 
 ## 2026-08-04 PDT decision: Creator Clubs uses `main` as its only working branch
 

@@ -3,6 +3,32 @@
 Append dated experiments and results. Preserve negative results; they narrow the
 problem and prevent repeated work.
 
+## 2026-08-05 PDT — printable two-page Motion Lab V6 physical evaluation sheet
+
+**Question:** create a polished handout for tonight's physical evaluation that
+contains every on-club V6 candidate, not the browser-only Theme Studio ideas,
+with enough compact room to score and annotate each effect.
+
+**Implementation:** added `tools/generate_motion_lab_v6_evaluation_sheet.py`.
+It reads `scenes/motion-lab-v6/effects.json` directly, asserts the exact forty
+P1E1 through P5E8 entries, and writes
+`output/pdf/motion-lab-v6-physical-evaluation.pdf`. The static Letter-landscape
+sheet is exactly two pages with twenty rows each: P1/P2/P3E1-E4 on page 1 and
+the clearly labelled P3E5-E8 continuation plus P4/P5 on page 2. Every row has
+an ID, name, compact observation prompt, visibility and repeatability fields,
+Keep/Tune/Drop boxes, and a write-in note line.
+
+**Validation:** the first rendered draft exposed a page-two header that was
+faint because a translucent ReportLab tint leaked graphics state between pages.
+The generator now uses opaque calculated tints; the regenerated PDF parses as
+two 792 x 612-point Letter-landscape pages, contains all forty IDs and the
+Theme Studio exclusion, and was rendered at 160 DPI with Poppler. Both final
+page renders were visually inspected: no clipping, overlap, missing header,
+or cramped entry field remained. `git diff --check` passed.
+
+**Boundary:** this is a static evaluation aid only. It did not print, upload,
+load, persist, or otherwise touch a club or its firmware/settings.
+
 ## 2026-08-04 PDT — consolidate completed source onto `main`
 
 **Decision:** Luke does not want a review-branch workflow for this solo
