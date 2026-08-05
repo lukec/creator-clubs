@@ -3,6 +3,23 @@
 Append dated experiments and results. Preserve negative results; they narrow the
 problem and prevent repeated work.
 
+## 2026-08-04 PDT — consolidate completed source onto `main`
+
+**Decision:** Luke does not want a review-branch workflow for this solo
+repository. Keep the project together on `main`; create another branch only if
+he explicitly asks for isolation.
+
+**Verified precondition:** after fetching and pruning, local/remote `main` had
+zero commits absent from `codex/store-project-source`, while the temporary
+branch was four commits ahead. The worktree was clean, so `git merge --ff-only`
+advanced local `main` from `782356c` through `2a12968` without a merge commit,
+history rewrite, or conflict. Documentation references to the temporary compare
+branch were updated before the final push/deletion.
+
+**Final action:** push the resulting `main`, verify it matches `origin/main`,
+then delete `codex/store-project-source` locally and remotely. This is source
+control only; no page, club, firmware, BenTo show, or device setting changes.
+
 ## 2026-08-04 PDT — compile PPS notation into executable club/hand state
 
 **Question:** fix the visibly incorrect PPS card, and establish an architecture
@@ -63,9 +80,8 @@ separate public five-person star canary showed five performers, fifteen clubs,
 and five airborne throws. Browser diagnostics were empty.
 
 **GitHub source result:** commit `036fdc2` contains the compiler, model/page
-integration, generated bundle, tests, and this documentation. It is pushed on
-`codex/store-project-source`; the comparison is
-<https://github.com/lukec/creator-clubs/compare/main...codex/store-project-source>.
+integration, generated bundle, tests, and this documentation. It is included
+on `main` with publication-record commit `2a12968`.
 
 ## 2026-08-04 PDT — full 40-effect Motion Lab V6 local canary preflight
 
@@ -133,12 +149,12 @@ identity. A credential-pattern scan found no secret-shaped values in the public
 candidate, and a separate identifier scan found no exact device/network
 identity there.
 
-**Decision:** publish the complete durable candidate on
-`codex/store-project-source`, run the repository's available automated checks,
-and push the branch. Do not turn this request into a direct default-branch
-overwrite; provide the GitHub comparison for review. No physical club, BenTo,
-firmware, network, or saved device setting is changed by this source-control
-operation.
+**Initial decision, later superseded:** the complete durable candidate was
+first published on a temporary review branch after running the available
+checks. Luke subsequently clarified that this solo repository should use
+`main` only, so the branch was fast-forwarded into `main` and removed. No
+physical club, BenTo, firmware, network, or saved device setting was changed by
+either source-control operation.
 
 Luke confirmed the repository split: Passing/Pattern Lab and Glow Lab belong
 in the public `clubs` source tree, while `clubs-private` retains licensed audio,
@@ -157,11 +173,8 @@ JSON parser. `git diff --check` is clean. The separate `clubs-private` checkout
 is clean and synchronized with its remote default branch.
 
 **GitHub result:** substantive commit `6795afb` adds the complete bounded public
-source set and is pushed on `codex/store-project-source`. The comparison is
-<https://github.com/lukec/creator-clubs/compare/main...codex/store-project-source>.
-No draft pull request was opened because Luke asked for committed GitHub storage
-but did not ask to start a PR review; the pushed comparison is ready when he
-wants to merge it.
+source set. It is now included on `main`; the temporary review branch was later
+removed under the main-only decision above. No pull request was needed.
 
 ## 2026-08-04 PDT — direct Throw controls and one 3D surface for every Passing Lab card
 

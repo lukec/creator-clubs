@@ -2,6 +2,16 @@
 
 Last updated: 2026-08-04 PDT
 
+## 2026-08-04 PDT decision: Creator Clubs uses `main` as its only working branch
+
+Luke clarified that this is a solo project and does not need a standing review
+branch workflow. The four completed source/publication commits were verified as
+a clean fast-forward from `main`; they are now part of local `main`. The final
+GitHub step is to push `main`, then remove the temporary
+`codex/store-project-source` branch locally and remotely. Future completed work
+for this repository should stay together on `main` unless Luke explicitly asks
+for an isolated branch.
+
 ## 2026-08-04 PDT result: PPS now executes a compiled alternating-hand pattern
 
 Luke reported that PPS visually left both jugglers holding clubs rather than
@@ -43,11 +53,9 @@ five-person star reported five performers, fifteen clubs, and five airborne
 throws. Neither public canary produced browser errors. No club, firmware,
 BenTo show, or device setting changed.
 
-**GitHub source:** implementation commit `036fdc2` is pushed on
-`codex/store-project-source`. The review comparison remains
-<https://github.com/lukec/creator-clubs/compare/main...codex/store-project-source>;
-the public `clubs` repository contains the compiler, models, page, generated
-bundle, tests, and documentation together.
+**GitHub source:** implementation commit `036fdc2` and publication-record commit
+`2a12968` are included on `main`. The public `clubs` repository contains the
+compiler, models, page, generated bundle, tests, and documentation together.
 
 ## 2026-08-04 PDT local result: full 40-effect Motion Lab V6 is canary-ready, not installed
 
@@ -103,10 +111,9 @@ files. One redundant local BenTo snapshot inside a private-owned show directory
 contains device-specific network identity and therefore remains outside the
 public candidate. A repository scan found no credential-shaped values or exact
 device/network identifiers in the public commit candidate. The complete source
-set is committed as `6795afb` and pushed to
-`codex/store-project-source`. The branch comparison is
-<https://github.com/lukec/creator-clubs/compare/main...codex/store-project-source>;
-`main` remains unchanged pending review/merge.
+set was committed as `6795afb` and is now included on `main` with the later lab
+and documentation commits. The temporary publication branch is superseded by
+the main-only solo-project workflow above.
 
 ## 2026-08-04 PDT result: direct Throw buttons and all-pattern Passing Lab 3D are public
 

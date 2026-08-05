@@ -98,6 +98,11 @@ retains live device identity may not be tracked in either source tree. This
 keeps GitHub useful as both engineering record and reproducible source without
 turning it into a device/configuration leak.
 
+This is a solo-project repository. `main` is the single long-lived working
+branch, and completed source changes should be committed and pushed there so
+the project remains together. Do not leave review branches or compare-only
+publication state unless Luke explicitly asks for an isolated branch.
+
 ## Music-show palette and instrumentation policy
 
 A measured spectral feature is a control signal, not permission to use the
