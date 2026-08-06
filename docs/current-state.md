@@ -40,9 +40,15 @@ beat and four same-hand cross-feed throws in flight; a 390x844 triangle review
 kept all three inward-facing performers, the high double, controls, and facts
 inside the mobile layout.
 
-**Next action:** publish the synchronized v20 page, bundle, compiler, library,
-playback, and model files to `luk.ec/passing-lab/`, wait for the exact Pages
-commit, then repeat cache-busted public desktop/mobile checks.
+**Verified publication:** creator-clubs commit `2ab0d35` is on `main`. Pages
+commit `edf48ca` reached GitHub's `built` state at `2026-08-06T00:39:22Z` and is
+live at `https://luk.ec/passing-lab/?v=edf48ca`. The public HTML, stage bundle,
+and six relative modules were byte-equal to the committed Pages checkout. A
+cache-busted 390x844 browser check retained the full triangle viewer and its
+three inward-facing performers; a desktop check of Double PPS at beat 2 showed
+12 declared clubs, four airborne clubs, left-to-left crossing passes, and
+single selfs. The remaining useful next action is physical review of that
+cross-feed hand convention; any correction belongs in event data.
 
 ## 2026-08-05 PDT result: Passing Lab compiles one front-facing actor frame for every pattern
 

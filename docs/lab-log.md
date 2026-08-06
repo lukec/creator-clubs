@@ -81,7 +81,13 @@ review. Round/star passes now default to straights because their target geometry
 does not prove hand technique; future verified crossings belong in those event
 definitions.
 
-**Publication:** pending the source commit and synchronized Pages deployment.
+**Publication:** creator-clubs commit `2ab0d35` was pushed directly to `main`.
+Pages commit `edf48ca` reached the exact `built` state at
+`2026-08-06T00:39:22Z`. All eight public Passing Lab files were byte-equal to
+the committed Pages checkout at `https://luk.ec/passing-lab/?v=edf48ca`.
+Cache-busted live browser checks covered the directed triangle at 390x844 and
+the Double PPS crossing beat on desktop; the latter exposed 12 declared clubs,
+four airborne, left-to-left crossing passes, and single selfs.
 
 ## 2026-08-05 PDT — compile formation facing once and prevent generic passes through bodies
 
