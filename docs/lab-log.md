@@ -3,6 +3,86 @@
 Append dated experiments and results. Preserve negative results; they narrow the
 problem and prevent repeated work.
 
+## 2026-08-05 PDT — semantic pass hands and real multi-beat triangle doubles
+
+**Question:** apply Luke's definitions to the remaining Passing Lab patterns:
+a crossing is left-to-left or right-to-right, a normal straight pass changes
+hands, and the ten-club directed triangle should use explicitly described
+doubles when that extra time prevents two clubs reaching one hand together.
+Keep the result in the shared data/compiler/executor pipeline rather than adding
+pattern-specific animation logic.
+
+**User-confirmed behavior:** a straight right-hand pass arrives in the
+receiver's left hand, with the left-to-right mirror on the opposite phase. A
+crossing keeps the named hand. Luke described a double as one additional full
+club rotation at about twice a regular throw's height, and confirmed that the
+triangle schedule is acceptable as long as two clubs do not arrive at one hand
+together. More than three clubs per participant commonly motivates doubles or
+triples, but the throw must be declared by the pattern rather than inferred from
+inventory. Luke further confirmed that this variation normally applies only to
+passes: self throws default to singles unless the individual self is one of the
+rare explicitly declared exceptions.
+
+**Verified pre-change defects:** all 50 compiled events carrying the old
+`crossing` label caught in the opposite hand. The label had been inferred from
+round/star target geometry while `event()` independently defaulted every catch
+to the opposite hand. With every throw completed in its launch beat, the
+directed triangle had four wrapped target-hand arrival collisions; for example,
+A's opening pass and B's self both reached B-left. The existing Double PPS
+cross-feed schedule had eight analogous collisions. `flightBeats` was stored
+but ignored by both token ownership and the generic gesture; pass arcs used a
+fixed `0.64 m` rise.
+
+**Implementation:** compiler version 3 makes hand path semantic and validates
+`straight`, `crossing`, and `self` against the explicit catch hand. Target
+topology remains the literal performer ID. It validates throw type and numeric
+profile fields, rejects duplicate `(arrival beat, target, catch hand)` slots,
+and derives startup hand allocation with delayed arrivals included. The library
+provides named hold/single/double defaults. Each authored directed-triangle pass
+explicitly chooses `double`, resolving to two beats, 2.5 rotations, and a `2×`
+height multiplier; mirroring preserves that data. Round and star generators no
+longer infer a hand path from target distance. The four authored lateral
+exchanges in Double PPS cross-feed are declared crossing singles so their self
+and pass catches use different hands.
+
+Playback now advances a persistent token ledger in absolute beat time. It
+processes catches before launches at a shared boundary, retains prior-beat
+doubles with stable club IDs, and separately exposes current instructions and
+active flights. Generic executor version 4 uses each active throw's own elapsed
+time, fixed `0.20`-beat load/catch-return windows, declared spin, and declared
+height multiplier. The selected pattern object remains the only input: neither
+playback nor the generic model imports a pattern ID. Current-beat chips and
+accessible descriptions expose throw type, path, hands, duration, rotations,
+and height.
+
+**Validation:** the rebuilt web suite passes 111/111. Regressions cover both
+hand mappings, contradictory data, arrival collisions including a self, delayed
+startup hand demand, triangle overlap and token identity across loop seams,
+one-extra-rotation and double-height motion, UI semantics, and the synchronized
+v20 module graph. An additional script sampled 4,100 frames over five loops of
+all normal cards through both inventory and generic 3D models; all 48 patterns
+retained their declared unique inventory. The compiled catalogue contains 336
+straight passes, eight explicit crossings, six mirrored triangle doubles, zero
+path/hand mismatch, and zero duplicate arrival slot.
+
+**Rendered review:** desktop slow playback showed the triangle's opening double
+at its high midpoint while the next beat loaded three new throws, then showed
+four same-hand Double PPS cross-feed throws simultaneously airborne. The event
+text correctly displayed `A left -> B left` and `C left -> D left`. At 390x844,
+the triangle retained all three inward-facing performers, the high double arc,
+transport controls, and declarative facts without visible horizontal clipping.
+
+**Model boundary and open review point:** the two-beat/2.5-rotation/2×-arc
+double is a transparent animation policy derived from Luke's description, not
+measured ballistics. The cross-feed's lateral crossing choice is the minimal
+schedule correction that satisfies the arrival invariant and its existing
+cross-feed definition; confirm that exact hand convention during physical
+review. Round/star passes now default to straights because their target geometry
+does not prove hand technique; future verified crossings belong in those event
+definitions.
+
+**Publication:** pending the source commit and synchronized Pages deployment.
+
 ## 2026-08-05 PDT — compile formation facing once and prevent generic passes through bodies
 
 **Question:** make the remaining Passing Lab cards execute from declarative

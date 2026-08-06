@@ -22,11 +22,11 @@
   </section>
 </main>
 <span id="copy-status" class="sr-only" role="status"></span>
-<script src="./passing-four-count-stage.iife.js?build=orientation-plan-v19"></script>
+<script src="./passing-four-count-stage.iife.js?build=throw-semantics-v20"></script>
 <script type="module">
-import { PASSING_COMING_NEXT, PASSING_PATTERNS, eventsAtBeat, getPassingPattern, passingStateFromHash, passingStateHash } from "../../tools/web-sim/src/passing-library.mjs?build=orientation-plan-v19";
-import { COUNT_IN_BEATS, advancePlayhead, clampPlayhead, cueAtPlayhead, sampleInventory, stepPlayhead } from "../../tools/web-sim/src/passing-playback.mjs?build=orientation-plan-v19";
-import { FOUR_COUNT_3D_BASE_BPM, selectFourCount3DPattern } from "../../tools/web-sim/src/passing-four-count-3d.mjs?build=orientation-plan-v19";
+import { PASSING_COMING_NEXT, PASSING_PATTERNS, eventsAtBeat, getPassingPattern, passingStateFromHash, passingStateHash } from "../../tools/web-sim/src/passing-library.mjs?build=throw-semantics-v20";
+import { COUNT_IN_BEATS, advancePlayhead, clampPlayhead, cueAtPlayhead, sampleInventory, stepPlayhead } from "../../tools/web-sim/src/passing-playback.mjs?build=throw-semantics-v20";
+import { FOUR_COUNT_3D_BASE_BPM, selectFourCount3DPattern } from "../../tools/web-sim/src/passing-four-count-3d.mjs?build=throw-semantics-v20";
 
 const $ = (selector) => document.querySelector(selector);
 const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
@@ -72,7 +72,7 @@ function updatePlaybackContext() {
     $('#stage-status').textContent = `${pattern.title}: ${dedicated ? 'dedicated physical' : 'compiled-pattern'} 3D stage active. Playback and current cue controls are below the stage.`;
     $('#timeline-help').textContent = dedicated
       ? `The ${pattern.title} phrase repeats while the physical six-club state continues. The hand carries a pass upward and inward to a belly-button-height release; the receiver catches in a wider outside lane. Left/Right use sampled participant eye positions. At 1×, timing is derived from the Earth-gravity path; 0.25× and 0.5× are deliberate slow motion. Scrubbing pauses playback.`
-      : `The ${pattern.title} card supplies a compiled execution plan to the shared 3D juggler and club model. The executor follows declared throw hands, catch hands, targets, throw kinds, spin counts, and formation positions. Throws load upward toward the body midline and arrive in a wider catch lane. Pattern-specific data may refine technique or placement; the animation engine does not branch on this card's ID. Performer views use the 3D model camera. Scrubbing pauses playback.`;
+      : `The ${pattern.title} card supplies a compiled execution plan to the shared 3D juggler and club model. The executor follows declared throw hands, catch hands, targets, throw types, pass paths, durations, spin counts, height multipliers, and formation positions. Throws load upward toward the body midline and arrive in a wider catch lane. Pattern-specific data may refine technique or placement; the animation engine does not branch on this card's ID. Performer views use the 3D model camera. Scrubbing pauses playback.`;
     $('#speed-label').textContent = dedicated ? `Speed (${physicalTempoLabel()})` : `Speed (${pattern.tempo} BPM)`;
     $('#speed').setAttribute('aria-label', dedicated ? `Playback speed from a ${physicalTempoLabel()} physical base` : `Playback speed from the declared ${pattern.tempo} BPM tempo`);
     return;
@@ -122,7 +122,13 @@ function setPatternText() {
   const cycleFact = plan?.handPeriodMultiplier > 1
     ? `${plan.sourceLoopBeats}-beat notation → ${pattern.loopBeats}-beat alternating-hand cycle`
     : `${pattern.loopBeats}-beat execution cycle`;
-  $('#facts').textContent = `${pattern.clubCount} declared clubs · ${tempoFact} · ${cycleFact} · ${pattern.terminology} · ${isPhysicalTwoPersonFoundation() ? 'dedicated physical 3D foundation' : 'compiled-pattern 3D executor'}`;
+  const sourceEvents = pattern.events.filter((entry) => entry.beat < (plan?.sourceLoopBeats || pattern.loopBeats));
+  const doublePasses = sourceEvents.filter((entry) => entry.kind === 'pass' && entry.throwType === 'double');
+  const doubleProfiles = [...new Set(doublePasses.map((entry) => `${entry.flightBeats} beats / ${entry.spins} rotations / ${entry.heightMultiplier}× height`))];
+  const doubleFact = doublePasses.length
+    ? `${doublePasses.length} declared double ${doublePasses.length === 1 ? 'pass' : 'passes'}${doubleProfiles.length ? ` (${doubleProfiles.join(', ')})` : ''}`
+    : 'no declared double passes';
+  $('#facts').textContent = `${pattern.clubCount} declared clubs · ${tempoFact} · ${cycleFact} · ${doubleFact} · ${pattern.terminology} · ${isPhysicalTwoPersonFoundation() ? 'dedicated physical 3D foundation' : 'compiled-pattern 3D executor'}`;
   const holder = $('#provenance'); holder.replaceChildren(document.createTextNode(pattern.provenance.summary));
   if (pattern.provenance.references.length) { holder.append(document.createElement('br')); pattern.provenance.references.forEach((reference, index) => { if (index) holder.append(' · '); const link = document.createElement('a'); link.href = reference.url; link.target = '_blank'; link.rel = 'noreferrer'; link.textContent = reference.title; holder.append(link); }); if (pattern.provenance.references.some((reference) => reference.url.includes('modernpassing.com'))) holder.append(document.createElement('br'), 'Modern Passing teaching material: CC BY 4.0 attribution; Passing Lab wording and event data are independently authored.'); }
 }
@@ -142,9 +148,29 @@ function updateTransportDom(sample) {
   $('#inventory').textContent = physical
     ? `${sample.total} persistent clubs · ${sample.airborne.length} in flight · ${handConnected.length} hand-connected${studyNote} (${allocation} at start)`
     : `${sample.total} declared clubs · ${sample.held.length} held · ${sample.airborne.length} airborne${studyNote} (${allocation})`;
-  const describe = (entry) => physical
-    ? `${personName(entry.sourcePersonId)} ${entry.hand}-hand ${entry.kind}${entry.kind === 'pass' ? ` to ${personName(entry.targetPersonId)} ${entry.catchHand} hand` : ''}`
-    : `${personName(entry.juggler)} ${entry.hand}-hand ${entry.kind}${entry.kind === 'pass' ? ` to ${personName(entry.target)} ${entry.catchHand} hand` : ''}`;
+  const declaredEntry = (entry) => {
+    if (!physical) return entry;
+    const definition = pattern.events.find((candidate) => candidate.beat === entry.phraseBeat && candidate.juggler === entry.sourcePersonId);
+    return definition ? { ...definition, ...entry } : entry;
+  };
+  const numberLabel = (value) => Number.isInteger(Number(value)) ? String(Number(value)) : String(Number(value)).replace(/0+$/, '').replace(/\.$/, '');
+  const semantics = (entry) => {
+    const throwType = entry.throwType || (entry.kind === 'hold' ? 'hold' : 'single');
+    const path = entry.kind === 'pass' ? (entry.path || (entry.hand === entry.catchHand ? 'crossing' : 'straight')) : entry.kind;
+    const flightBeats = Number.isFinite(Number(entry.flightBeats)) ? Number(entry.flightBeats) : 1;
+    const spins = Number.isFinite(Number(entry.spins)) ? Number(entry.spins) : (entry.kind === 'pass' ? 1.5 : 1);
+    const heightMultiplier = Number.isFinite(Number(entry.heightMultiplier)) ? Number(entry.heightMultiplier) : 1;
+    const action = entry.kind === 'pass' ? `${throwType} ${path} pass` : `${throwType} ${entry.kind}`;
+    const motion = `${numberLabel(flightBeats)} flight ${flightBeats === 1 ? 'beat' : 'beats'} · ${numberLabel(spins)} ${spins === 1 ? 'rotation' : 'rotations'} · ${numberLabel(heightMultiplier)}× height`;
+    return { action, motion };
+  };
+  const describe = (entry) => {
+    const definition = declaredEntry(entry);
+    const sourceId = physical ? definition.sourcePersonId : definition.juggler;
+    const targetId = physical ? definition.targetPersonId : definition.target;
+    const detail = semantics(definition);
+    return `${personName(sourceId)} ${definition.hand}-hand ${detail.action}${definition.kind === 'pass' ? ` to ${personName(targetId)} ${definition.catchHand} hand` : ''}`;
+  };
   const noFlightDetail = sample.playhead < 0
     ? (physical ? 'Count-in clubs remain hand-connected.' : 'Count-in clubs remain held.')
     : (physical ? 'All clubs remain hand-connected during this load or return.' : 'No club is airborne during this load or catch phase.');
@@ -154,7 +180,7 @@ function updateTransportDom(sample) {
   if (!activeEvents.length) list.textContent = physical
     ? (sample.playhead < 0 ? 'Count-in: clubs remain hand-connected.' : 'All clubs are hand-connected during this load or return.')
     : 'Count-in: clubs remain held.';
-  else activeEvents.forEach((entry) => { const chip = document.createElement('span'); chip.className = `event ${entry.kind}`; chip.textContent = physical ? `${personName(entry.sourcePersonId)} ${entry.hand} → ${entry.catchHand} · ${entry.kind}${entry.kind === 'pass' ? ` → ${personName(entry.targetPersonId)}` : ''}` : `${personName(entry.juggler)} ${entry.hand} → ${entry.catchHand} · ${entry.kind}${entry.kind === 'pass' ? ` → ${personName(entry.target)}` : ''}`; list.append(chip); });
+  else activeEvents.forEach((entry) => { const definition = declaredEntry(entry); const sourceId = physical ? definition.sourcePersonId : definition.juggler; const targetId = physical ? definition.targetPersonId : definition.target; const detail = semantics(definition); const chip = document.createElement('span'); chip.className = `event ${definition.kind}`; chip.textContent = `${personName(sourceId)} ${definition.hand} → ${definition.catchHand} · ${detail.action}${definition.kind === 'pass' ? ` → ${personName(targetId)}` : ''}`; const accessibleDetail = `${describe(entry)} · ${detail.motion}`; chip.title = accessibleDetail; chip.setAttribute('aria-label', accessibleDetail); list.append(chip); });
 }
 
 function selectPattern(id, options = {}) {

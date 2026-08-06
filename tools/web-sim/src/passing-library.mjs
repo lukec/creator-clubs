@@ -1,6 +1,6 @@
-import { compilePassingPattern, oppositePassingHand } from "./passing-pattern-compiler.mjs?build=orientation-plan-v19";
+import { compilePassingPattern, passingCatchHand } from "./passing-pattern-compiler.mjs?build=throw-semantics-v20";
 
-export const PASSING_LIBRARY_VERSION = 1;
+export const PASSING_LIBRARY_VERSION = 2;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const freeze = (value) => Object.freeze(value);
@@ -11,19 +11,33 @@ const DEFAULT_COUNT_IN = freeze([
   cue("Pass", 0, "Start the scheduled pattern together."),
 ]);
 
-const performer = (id, name, x, z, facing) => freeze({ id, name, x, z, facing });
-const event = (beat, juggler, hand, kind, target, options = {}) => freeze({
-  beat, juggler, hand, kind, target: target || null,
-  // `hand` is the throwing hand. Keeping the receiving hand explicit makes the
-  // event useful to a renderer without inferring a camera-relative catch.
-  catchHand: options.catchHand || oppositePassingHand(hand),
-  path: options.path || (kind === "pass" ? "straight" : "self"),
-  flightBeats: options.flightBeats ?? 1,
-  spins: options.spins ?? (kind === "pass" ? 1.5 : 1),
-  startPose: options.startPose || "side-head-down",
-  catchPose: options.catchPose || "shoulder-club-up",
-  note: options.note || "",
+export const PASSING_THROW_PROFILES = freeze({
+  hold: freeze({ flightBeats: 0, spinsByKind: freeze({ hold: 0 }), heightMultiplier: 0 }),
+  single: freeze({ flightBeats: 1, spinsByKind: freeze({ pass: 1.5, self: 1 }), heightMultiplier: 1 }),
+  double: freeze({ flightBeats: 2, spinsByKind: freeze({ pass: 2.5, self: 2 }), heightMultiplier: 2 }),
 });
+
+const performer = (id, name, x, z, facing) => freeze({ id, name, x, z, facing });
+const event = (beat, juggler, hand, kind, target, options = {}) => {
+  const path = options.path || (kind === "pass" ? "straight" : "self");
+  const throwType = options.throwType || (kind === "hold" ? "hold" : "single");
+  const profile = PASSING_THROW_PROFILES[throwType];
+  if (!profile) throw new RangeError(`unknown passing throw type ${throwType}`);
+  return freeze({
+    beat, juggler, hand, kind, target: target || null,
+    // The semantic path owns the receiving hand: straights change hands while
+    // crossings retain the named hand. Compiled events keep the result explicit.
+    catchHand: options.catchHand ?? passingCatchHand(hand, path),
+    path,
+    throwType,
+    flightBeats: options.flightBeats ?? profile.flightBeats,
+    spins: options.spins ?? profile.spinsByKind[kind],
+    heightMultiplier: options.heightMultiplier ?? profile.heightMultiplier,
+    startPose: options.startPose || "side-head-down",
+    catchPose: options.catchPose || "shoulder-club-up",
+    note: options.note || "",
+  });
+};
 
 const provenance = (summary, references) => freeze({ summary, references: references.map((reference) => freeze(reference)) });
 const terminologySources = freeze([
@@ -57,7 +71,7 @@ function facingPair(id, title, sequence, summary, terminology, difficulty = "eas
 
 function round(id, title, count, positions, summary, options = {}) {
   const people = positions.map((position, index) => performer(`p${index + 1}`, `P${index + 1}`, ...position));
-  const events = people.map((person, index) => event(0, person.id, index % 2 ? "right" : "left", "pass", people[(index + 1) % people.length].id, { path: "crossing" }));
+  const events = people.map((person, index) => event(0, person.id, index % 2 ? "right" : "left", "pass", people[(index + 1) % people.length].id, { path: options.path || "straight" }));
   return compilePassingPattern({
     id, title, peopleCount: count, formation: `${count}-person round`, clubCount: count * 3,
     summary, tempo: 100, loopBeats: 1, performers: people, events, countIn: DEFAULT_COUNT_IN,
@@ -75,11 +89,11 @@ const FIVE_PEOPLE = freeze([
 ]);
 const token = (kind, target, hand, options = {}) => ({ kind, target, hand, ...options });
 function scheduledPattern({ id, title, people, formation, clubCount, tempo = 100, rows, summary, terminology, difficulty = "medium", basis = "original schedule study", references = [], startingPhase = "documented convention", inventoryAllocation, inventoryMode }) {
-  const events = rows.flatMap((row, beat) => Object.entries(row).map(([juggler, item]) => event(beat, juggler, item.hand, item.kind, item.target || juggler, { path: item.path || (item.kind === "pass" ? "straight" : "self"), note: item.note || "", flightBeats: item.flightBeats, spins: item.spins, catchHand: item.catchHand })));
+  const events = rows.flatMap((row, beat) => Object.entries(row).map(([juggler, item]) => event(beat, juggler, item.hand, item.kind, item.target || juggler, { path: item.path || (item.kind === "pass" ? "straight" : "self"), throwType: item.throwType, note: item.note || "", flightBeats: item.flightBeats, spins: item.spins, heightMultiplier: item.heightMultiplier, catchHand: item.catchHand })));
   return compilePassingPattern({ id, title, peopleCount: people.length, formation, clubCount, summary, tempo, loopBeats: rows.length, performers: people, events: freeze(events), countIn: DEFAULT_COUNT_IN, terminology, difficulty, basis, startingPhase, inventoryAllocation, inventoryMode, provenance: provenance(basis === "source-backed" ? "Original event schedule based on independently researched timing facts; no source prose, diagrams, graphics, code, or bulk data copied." : "Original explicit schedule study. It is a reviewable convention, not a claim of a canonical published start.", references) });
 }
 function ringPattern({ id, title, people, formation, sequence, step = 1, summary, terminology, difficulty = "medium", basis = "original schedule study", references = [] }) {
-  const rows = sequence.map(({ kind, hand }, beat) => Object.fromEntries(people.map((person, index) => [person.id, token(kind, kind === "pass" ? people[(index + step + people.length) % people.length].id : person.id, hand || ((beat + index) % 2 ? "right" : "left"), { path: kind === "pass" ? (Math.abs(step) > 1 ? "crossing" : "straight") : "self" })])));
+  const rows = sequence.map(({ kind, hand, path, ...throwOptions }, beat) => Object.fromEntries(people.map((person, index) => [person.id, token(kind, kind === "pass" ? people[(index + step + people.length) % people.length].id : person.id, hand || ((beat + index) % 2 ? "right" : "left"), { ...throwOptions, path: kind === "pass" ? (path || "straight") : "self" })])));
   return scheduledPattern({ id, title, people, formation, clubCount: people.length * 3, rows, summary, terminology, difficulty, basis, references });
 }
 
@@ -151,9 +165,9 @@ export const PASSING_PATTERNS = freeze([
     // instead of silently normalising it to three per person.
     inventoryAllocation: freeze({ a: 4, b: 3, c: 3 }),
     rows: [
-      { a: token("pass", "b", "right"), b: token("self", "b", "right"), c: token("self", "c", "right") },
-      { a: token("self", "a", "left"), b: token("pass", "c", "right"), c: token("self", "c", "left") },
-      { a: token("self", "a", "right"), b: token("self", "b", "left"), c: token("pass", "a", "right") },
+      { a: token("pass", "b", "right", { throwType: "double" }), b: token("self", "b", "right"), c: token("self", "c", "right") },
+      { a: token("self", "a", "left"), b: token("pass", "c", "right", { throwType: "double" }), c: token("self", "c", "left") },
+      { a: token("self", "a", "right"), b: token("self", "b", "left"), c: token("pass", "a", "right", { throwType: "double" }) },
     ],
   }),
   scheduledPattern({
@@ -194,8 +208,8 @@ export const PASSING_PATTERNS = freeze([
     summary: "A four-person PPS cross-feed clock with two alternating target relationships shown as a stable square convention.", terminology: "PPS cross feed / double 3-count", difficulty: "hard", basis: "source-backed", references: [terminologySources[3]],
     rows: [
       { a: token("pass", "c", "right"), b: token("pass", "d", "right"), c: token("pass", "a", "right"), d: token("pass", "b", "right") },
-      { a: token("pass", "b", "left"), b: token("self", "b", "left"), c: token("pass", "d", "left"), d: token("self", "d", "left") },
-      { a: token("self", "a", "right"), b: token("pass", "a", "right"), c: token("self", "c", "right"), d: token("pass", "c", "right") },
+      { a: token("pass", "b", "left", { path: "crossing", throwType: "single" }), b: token("self", "b", "left"), c: token("pass", "d", "left", { path: "crossing", throwType: "single" }), d: token("self", "d", "left") },
+      { a: token("self", "a", "right"), b: token("pass", "a", "right", { path: "crossing", throwType: "single" }), c: token("self", "c", "right"), d: token("pass", "c", "right", { path: "crossing", throwType: "single" }) },
     ],
   }),
   scheduledPattern({

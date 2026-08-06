@@ -133,3 +133,26 @@ test("the generic pass loads upward toward the midline and catches outside its r
   const source = load.people.find((person) => person.id === gesture.event.juggler);
   assert.ok(Math.abs(source.hands[gesture.event.hand].y - gesture.releaseGrip.y) < 1e-12, "hand remains connected through release");
 });
+
+test("declared triangle doubles stay aloft across the next beat and drive height and spin", () => {
+  const triangle = getPassingPattern("directed-triangle-waltz");
+  const regular = getPassingPattern("one-count");
+
+  const regularMidpoint = sampleGenericPassing3D(regular, 0.5).clubs.find((club) => club.kind === "pass");
+  const doubleMidpoint = sampleGenericPassing3D(triangle, 1).clubs.find((club) => (
+    club.kind === "pass" && club.juggler === "a" && club.launchBeat === 0
+  ));
+
+  assert.ok(regularMidpoint, "regular pass reaches its flight midpoint");
+  assert.ok(doubleMidpoint, "beat-zero double remains active on the following beat");
+  assert.ok(Math.abs(regularMidpoint.flightProgress - 0.5) < 1e-12);
+  assert.ok(Math.abs(doubleMidpoint.flightProgress - 0.5) < 1e-12);
+  assert.equal(doubleMidpoint.arcRiseMetres, regularMidpoint.arcRiseMetres * 2, "the event's 2x height profile doubles the arc rise");
+  assert.ok(Math.abs(doubleMidpoint.spinRadians - regularMidpoint.spinRadians - Math.PI * 2) < 1e-12, "a double adds exactly one full rotation");
+
+  const overlap = sampleGenericPassing3D(triangle, 1.5);
+  assert.equal(overlap.total, 10);
+  assert.equal(overlap.airborne.length, 4, "one prior double overlaps the next row's three throws");
+  assert.equal(new Set(overlap.clubs.map((club) => club.id)).size, 10, "overlap keeps one pose per declared club");
+  assert.ok(overlap.activeEvents.some((event) => event.launchBeat === 0 && event.elapsedBeats === 1.5));
+});

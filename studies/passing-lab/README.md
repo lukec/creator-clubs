@@ -21,19 +21,29 @@ The generated IIFE contains Three.js, the neutral club geometry, and the
 page, bundle, and listed modules together with their existing relative paths.
 
 The library's authored truth is a versioned declarative event schedule. Every
-event specifies beat, juggler, hand, self/pass/hold role, target, path,
-flight/spin, and throw/catch poses. It also records a Sky/Earth/Pass start
-convention. Siteswap or Prechac labels can be added later, but are not used as
-the rendering model.
+event specifies beat, juggler, throwing hand, self/pass/hold role, target,
+semantic pass path, throw type, resolved flight duration/spin/height profile,
+and throw/catch poses. It also records a Sky/Earth/Pass start convention.
+Siteswap or Prechac labels can be added later, but are not used as the rendering
+model.
+
+Luke's confirmed passing vocabulary gives `path` a hand-to-hand meaning:
+`straight` changes hands at the receiver (right-to-left, or its left-to-right
+mirror), while `crossing` stays in the named hand (right-to-right or
+left-to-left). Formation topology is separate. The literal `target` performer
+defines who receives a pass, so a long star chord or route through the middle
+does not become a crossing pass merely because lines cross in an audience-view
+diagram.
 
 `passing-pattern-compiler.mjs` turns that authored schedule into the execution
 truth consumed by playback. It validates explicit actions and performers,
-extends a non-hand-periodic notation cycle with its opposite-hand continuation,
-and derives a safe initial club allocation for each hand. The page passes that
-compiled pattern object to the stage; the generic model has no catalogue import
-and no per-pattern-ID animation branches. Technique, route, and placement
-exceptions belong in the pattern data unless they justify a separately
-validated physical sampler.
+checks straight/crossing catch-hand semantics, extends a non-hand-periodic
+notation cycle with its opposite-hand continuation, rejects two arrivals in the
+same performer/hand/beat slot, and derives a safe initial club allocation for
+each hand. The page passes that compiled pattern object to the stage; the
+generic model has no catalogue import and no per-pattern-ID animation branches.
+Technique, route, throw profile, and placement exceptions belong in the pattern
+data unless they justify a separately validated physical sampler.
 
 V1 contains twelve playable cards in each 2-, 3-, 4-, and 5-person section.
 The catalogue distinguishes **source-backed** timing/terminology cards from
@@ -69,11 +79,12 @@ It provides beat stepping, a beat-labelled scrubber, 0.25×/0.5×/1× playback,
 and Reset replay of Sky/Earth/Pass.
 
 `passing-playback.mjs` makes the declared `clubCount` visible rather than
-treating it as metadata only. Each sampled frame contains unique club tokens:
-a self/pass event must select a token from the thrower's declared hand, and all
-remaining tokens are rendered held at hand/side positions. The helper asserts
-that held plus airborne tokens equal the card's declared inventory, so
-scrubbing is deterministic and does not add unrelated props merely to make a
+treating it as metadata only. Its deterministic ledger follows each unique club
+token across held, newly launched, multi-beat airborne, caught, and re-held
+states. A self/pass event must select a token from the thrower's declared hand;
+an earlier double can remain airborne while the next beat launches more clubs.
+The helper asserts that held plus active-flight tokens equal the card's declared
+inventory, so scrubbing does not add or duplicate props merely to make a
 formation look full.
 
 The current beat's instruction remains active through its load, flight, and
@@ -85,9 +96,14 @@ Most cards declare three clubs per person. Two explicit data exceptions remain
 visible rather than being normalised away: the retained Stage V opening is a
 three-prop, non-loop-conserving **visual study** with a one/one/one allocation;
 the directed triangle card explicitly declares ten clubs with a four/three/three
-allocation. The visual-study card is deliberately not claimed as a physical
-ownership loop. Normal cards use a simplified steady-state token ledger, not
-measured juggling biomechanics or a siteswap/Prechac simulator.
+allocation. Each triangle pass is explicitly a `double`: two beats of flight,
+`2.5` end-over-end rotations (one full rotation beyond the `1.5`-turn single),
+and `2×` the generic single-pass arc rise. The longer declared flight keeps its
+arrivals out of the simultaneous self-throw catch hand. These numeric values are
+a reviewable animation profile based on Luke's description, not measured
+ballistics or physical calibration. The visual-study card is deliberately not
+claimed as a physical ownership loop, and the normal executor is not a complete
+siteswap/Prechac simulator.
 
 Audience view is the default. Every playable pattern now uses the shared
 Three.js surface. Per-performer views use the active 3D sample's eye placement
@@ -109,7 +125,29 @@ renders their declared people, formation, target routes, and entire
 club inventory, but does not claim the detailed model's physical/collision
 coverage.
 
-### Current viewer revision: v19 compiled orientation and body-path guard
+### Current viewer revision: v20 declarative throw and pass semantics
+
+**User-confirmed terminology:** a straight pass changes hands at the receiver;
+a crossing pass remains in the same hand. `target` continues to encode formation
+topology independently. The compiler rejects contradictory path/catch-hand data
+and any completed execution cycle with two clubs arriving in one receiver hand
+on the same beat.
+
+Every event carries a named `throwType` and its resolved `flightBeats`, `spins`,
+and `heightMultiplier`. Playback retains airborne tokens for the full declared
+duration instead of completing every throw inside its launch beat. The generic
+3D executor reads those values directly, including the directed triangle's
+explicit two-beat, 2.5-rotation, 2×-arc doubles. The UI exposes the same semantic
+and numeric profile. Self throws still default independently to singles; a rare
+double or triple self must be declared on that specific event. None of these
+changes adds a pattern-ID animation branch.
+
+The single/double values are declared teaching-model policy. Only the narrower
+canonical two-person sampler claims its existing Earth-gravity timing and
+detailed physical/collision checks; v20 does not turn the generic catalogue into
+measured biomechanics.
+
+### Prior viewer revision: v19 compiled orientation and body-path guard
 
 The compiler now turns each declared performer heading into one normalized
 actor-local frame before execution. The generic model uses that frame for the

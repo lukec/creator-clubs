@@ -6,6 +6,7 @@ import {
   PASSING_FACING_CONVENTION,
   PASSING_PATTERN_COMPILER_VERSION,
   compilePassingPattern,
+  passingCatchHand,
   passingFacingVector,
 } from "../src/passing-pattern-compiler.mjs";
 
@@ -16,6 +17,26 @@ const unitBetween = (source, target) => {
   const length = Math.hypot(x, z);
   return { x: x / length, z: z / length };
 };
+const singlePass = (overrides = {}) => ({
+  beat: 0,
+  hand: "right",
+  catchHand: "left",
+  kind: "pass",
+  path: "straight",
+  throwType: "single",
+  flightBeats: 1,
+  spins: 1.5,
+  heightMultiplier: 1,
+  ...overrides,
+});
+
+test("passing paths map straight throws across hands and crossings within a hand", () => {
+  assert.equal(passingCatchHand("right", "straight"), "left");
+  assert.equal(passingCatchHand("left", "straight"), "right");
+  assert.equal(passingCatchHand("right", "crossing"), "right");
+  assert.equal(passingCatchHand("left", "crossing"), "left");
+  assert.throws(() => passingCatchHand("right", "diagonal"), /unknown passing path/);
+});
 
 test("passing headings use the documented audience coordinate convention", () => {
   assert.deepEqual(passingFacingVector(0), { x: 0, y: 0, z: 1 });
@@ -105,10 +126,76 @@ test("the compiler rejects invalid placement and passes behind declared facing",
       { id: "b", x: 0, z: -2, facing: 180 },
     ],
     events: [
-      { beat: 0, juggler: "a", hand: "right", catchHand: "left", kind: "pass", target: "b" },
-      { beat: 0, juggler: "b", hand: "right", catchHand: "left", kind: "pass", target: "a" },
+      singlePass({ juggler: "a", target: "b" }),
+      singlePass({ juggler: "b", target: "a" }),
     ],
   }), /behind or beside/);
+});
+
+test("the compiler rejects path-hand mismatches and invalid throw profile numbers", () => {
+  const pair = {
+    id: "semantic-contract",
+    loopBeats: 1,
+    clubCount: 6,
+    performers: [
+      { id: "a", x: 0, z: 0, facing: 0 },
+      { id: "b", x: 0, z: 2, facing: 180 },
+    ],
+  };
+  assert.throws(() => compilePassingPattern({
+    ...pair,
+    events: [
+      singlePass({ juggler: "a", target: "b", path: "crossing" }),
+      singlePass({ juggler: "b", target: "a", path: "crossing" }),
+    ],
+  }), /crossing pass from right must catch in right/);
+  assert.throws(() => compilePassingPattern({
+    ...pair,
+    events: [
+      singlePass({ juggler: "a", target: "b", flightBeats: 1.5 }),
+      singlePass({ juggler: "b", target: "a" }),
+    ],
+  }), /flightBeats must be a non-negative integer/);
+  assert.throws(() => compilePassingPattern({
+    ...pair,
+    events: [
+      singlePass({ juggler: "a", target: "b", heightMultiplier: Number.NaN }),
+      singlePass({ juggler: "b", target: "a" }),
+    ],
+  }), /heightMultiplier must be a non-negative finite number/);
+});
+
+test("the compiler rejects two clubs arriving at one hand, including a self arrival", () => {
+  assert.throws(() => compilePassingPattern({
+    id: "double-arrival",
+    loopBeats: 1,
+    clubCount: 9,
+    performers: [
+      { id: "a", x: 0, z: 0, facing: 0 },
+      { id: "b", x: 0, z: 2, facing: 180 },
+      { id: "c", x: 2, z: 0, facing: 0 },
+    ],
+    events: [
+      singlePass({ juggler: "a", target: "a", kind: "self", path: "self", spins: 1 }),
+      singlePass({ juggler: "b", target: "a" }),
+      singlePass({ juggler: "c", target: "c", kind: "self", path: "self", spins: 1 }),
+    ],
+  }), /send two clubs to a's left hand/);
+});
+
+test("initial hand demand accounts for a double that is still airborne on the next beat", () => {
+  const delayedSelfPattern = {
+    id: "delayed-hand-demand",
+    loopBeats: 2,
+    clubCount: 2,
+    performers: [{ id: "a", x: 0, z: 0, facing: 0 }],
+    events: [
+      singlePass({ beat: 0, juggler: "a", target: "a", kind: "self", path: "self", throwType: "double", flightBeats: 2, spins: 2, heightMultiplier: 2 }),
+      singlePass({ beat: 1, juggler: "a", target: "a", kind: "self", path: "self", hand: "left", catchHand: "right", spins: 1 }),
+    ],
+  };
+  assert.deepEqual(compilePassingPattern(delayedSelfPattern).executionPlan.initialHandAllocation.a, { left: 1, right: 1 });
+  assert.throws(() => compilePassingPattern({ ...delayedSelfPattern, id: "delayed-hand-shortage", clubCount: 1 }), /needs at least 2 clubs/);
 });
 
 test("the triangle actor frames face inward under the shared convention", () => {

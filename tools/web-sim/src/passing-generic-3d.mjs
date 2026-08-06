@@ -1,7 +1,13 @@
-import { sampleInventory } from "./passing-playback.mjs?build=orientation-plan-v19";
+import { sampleInventory } from "./passing-playback.mjs?build=throw-semantics-v20";
 
-export const GENERIC_PASSING_3D_VERSION = 3;
-export const GENERIC_PASSING_3D_TIMING = Object.freeze({ release: 0.20, catch: 0.80 });
+export const GENERIC_PASSING_3D_VERSION = 4;
+export const GENERIC_PASSING_3D_TIMING = Object.freeze({
+  release: 0.20,
+  catch: 0.80,
+  catchReturnBeats: 0.20,
+  catchReachBeats: 0.18,
+  followThroughBeats: 0.28,
+});
 export const GENERIC_PASSING_3D_BODY_PATH_POLICY = Object.freeze({
   requiredCentrelineClearanceMetres: 0.30,
 });
@@ -16,6 +22,8 @@ export const GENERIC_PASSING_3D_GESTURE = Object.freeze({
   catchForwardMetres: 0.38,
   catchGripHeightMetres: 1.20,
   gripFromBalanceMetres: 0.2515,
+  passArcRiseMetres: 0.64,
+  selfArcRiseMetres: 0.72,
   passSpinRadians: Math.PI * 3,
   selfSpinRadians: Math.PI * 2,
 });
@@ -165,7 +173,26 @@ function countInProgress(playhead, personIndex, peopleCount) {
   return 1 - smootherstep(playhead + 1);
 }
 
-function activeHandTargets(inventory, people, phase) {
+function eventMotionTiming(event) {
+  const duration = Number(event.flightBeats);
+  if (!Number.isFinite(duration) || duration <= 0) throw new RangeError(`invalid flight duration ${event.flightBeats}`);
+  const release = Math.min(GENERIC_PASSING_3D_TIMING.release, duration * 0.25);
+  const catchStart = Math.max(release, duration - GENERIC_PASSING_3D_TIMING.catchReturnBeats);
+  return {
+    duration,
+    release,
+    catchStart,
+    catchReach: Math.max(release, catchStart - GENERIC_PASSING_3D_TIMING.catchReachBeats),
+    followEnd: Math.min(catchStart, release + GENERIC_PASSING_3D_TIMING.followThroughBeats),
+  };
+}
+
+function eventElapsedBeats(event) {
+  const elapsed = Number(event.elapsedBeats);
+  return Number.isFinite(elapsed) ? clamp(elapsed, 0, Number(event.flightBeats) || 1) : 0;
+}
+
+function activeHandTargets(inventory, people) {
   const hands = new Map(people.map((person) => [person.id, {
     left: { position: readyGrip(person, "left"), influence: 0, mode: "ready" },
     right: { position: readyGrip(person, "right"), influence: 0, mode: "ready" },
@@ -182,22 +209,24 @@ function activeHandTargets(inventory, people, phase) {
     const release = releaseGrip(source, event.hand);
     const targetReady = readyGrip(target, event.catchHand);
     const catcher = catchGrip(target, event.catchHand);
-    if (phase <= GENERIC_PASSING_3D_TIMING.release) {
-      apply(source.id, event.hand, lerp(sourceReady, release, smootherstep(phase / GENERIC_PASSING_3D_TIMING.release)), 1, "forward-load");
-    } else if (phase < 0.48) {
+    const timing = eventMotionTiming(event);
+    const elapsed = eventElapsedBeats(event);
+    if (elapsed <= timing.release) {
+      apply(source.id, event.hand, lerp(sourceReady, release, smootherstep(elapsed / timing.release)), 1, "forward-load");
+    } else if (elapsed < timing.followEnd) {
       const follow = add(release, add(scale(source.forward, 0.035), vector(0, 0.025, 0)));
-      apply(source.id, event.hand, lerp(release, follow, smoothstep((phase - GENERIC_PASSING_3D_TIMING.release) / 0.28)), 0.84, "throw-follow");
+      apply(source.id, event.hand, lerp(release, follow, smoothstep((elapsed - timing.release) / (timing.followEnd - timing.release))), 0.84, "throw-follow");
     }
-    if (phase >= 0.62 && phase < GENERIC_PASSING_3D_TIMING.catch) {
-      apply(target.id, event.catchHand, lerp(targetReady, catcher, smootherstep((phase - 0.62) / (GENERIC_PASSING_3D_TIMING.catch - 0.62))), 0.92, "catch-reach");
-    } else if (phase >= GENERIC_PASSING_3D_TIMING.catch) {
-      apply(target.id, event.catchHand, lerp(catcher, targetReady, smootherstep((phase - GENERIC_PASSING_3D_TIMING.catch) / (1 - GENERIC_PASSING_3D_TIMING.catch))), 1, "catch-return");
+    if (elapsed >= timing.catchReach && elapsed < timing.catchStart) {
+      apply(target.id, event.catchHand, lerp(targetReady, catcher, smootherstep((elapsed - timing.catchReach) / (timing.catchStart - timing.catchReach))), 0.92, "catch-reach");
+    } else if (elapsed >= timing.catchStart) {
+      apply(target.id, event.catchHand, lerp(catcher, targetReady, smootherstep((elapsed - timing.catchStart) / (timing.duration - timing.catchStart))), 1, "catch-return");
     }
   });
   return hands;
 }
 
-function clubPoseForEvent(event, people, phase) {
+function clubPoseForEvent(event, people) {
   const source = personById(people, event.juggler);
   const target = personById(people, event.target || event.juggler);
   const sourceReady = readyGrip(source, event.hand);
@@ -211,27 +240,32 @@ function clubPoseForEvent(event, people, phase) {
     : isPass ? GENERIC_PASSING_3D_GESTURE.passSpinRadians : GENERIC_PASSING_3D_GESTURE.selfSpinRadians;
   const horizontal = normalize(vector(catcher.x - release.x, 0, catcher.z - release.z), source.forward);
   const axis = normalize(cross(horizontal, UP), source.right);
-  if (phase <= GENERIC_PASSING_3D_TIMING.release) {
-    const progress = smootherstep(phase / GENERIC_PASSING_3D_TIMING.release);
+  const timing = eventMotionTiming(event);
+  const elapsed = eventElapsedBeats(event);
+  const heightMultiplier = Number(event.heightMultiplier);
+  const arcRiseMetres = (isPass ? GENERIC_PASSING_3D_GESTURE.passArcRiseMetres : GENERIC_PASSING_3D_GESTURE.selfArcRiseMetres)
+    * (Number.isFinite(heightMultiplier) ? heightMultiplier : 1);
+  if (elapsed <= timing.release) {
+    const progress = smootherstep(elapsed / timing.release);
     const grip = lerp(sourceReady, release, progress);
-    return { position: balanceForGrip(grip, DOWN), quaternion: releaseQuaternion, direction: DOWN, motionState: "forward-load", state: "held", holder: { personId: source.id, hand: event.hand } };
+    return { position: balanceForGrip(grip, DOWN), quaternion: releaseQuaternion, direction: DOWN, motionState: "forward-load", state: "held", holder: { personId: source.id, hand: event.hand }, flightProgress: 0, spinRadians, arcRiseMetres };
   }
-  if (phase < GENERIC_PASSING_3D_TIMING.catch) {
-    const progress = clamp((phase - GENERIC_PASSING_3D_TIMING.release) / (GENERIC_PASSING_3D_TIMING.catch - GENERIC_PASSING_3D_TIMING.release));
+  if (elapsed < timing.catchStart) {
+    const progress = clamp((elapsed - timing.release) / (timing.catchStart - timing.release));
     const quaternion = quaternionMultiply(quaternionFromAxisAngle(axis, spinRadians * progress), releaseQuaternion);
     const direction = normalize(quaternionRotate(quaternion, UP), DOWN);
     const start = balanceForGrip(release, DOWN);
     const end = balanceForGrip(catcher, isPass ? UP : DOWN);
     const position = lerp(start, end, progress);
-    position.y += Math.sin(Math.PI * progress) * (isPass ? 0.64 : 0.72);
-    return { position, quaternion, direction, motionState: "flight", state: "airborne", holder: null };
+    position.y += Math.sin(Math.PI * progress) * arcRiseMetres;
+    return { position, quaternion, direction, motionState: "flight", state: "airborne", holder: null, flightProgress: progress, spinRadians, arcRiseMetres };
   }
   const catchDirection = isPass ? UP : DOWN;
   const catchQuaternion = quaternionForDirection(catchDirection, target.forward);
-  const progress = smootherstep((phase - GENERIC_PASSING_3D_TIMING.catch) / (1 - GENERIC_PASSING_3D_TIMING.catch));
+  const progress = smootherstep((elapsed - timing.catchStart) / (timing.duration - timing.catchStart));
   const grip = lerp(catcher, targetReady, progress);
   const direction = normalize(lerp(catchDirection, DOWN, progress), DOWN);
-  return { position: balanceForGrip(grip, direction), quaternion: progress < 0.5 ? catchQuaternion : quaternionForDirection(direction, target.forward), direction, motionState: "catch-return", state: "held", holder: { personId: target.id, hand: event.catchHand } };
+  return { position: balanceForGrip(grip, direction), quaternion: progress < 0.5 ? catchQuaternion : quaternionForDirection(direction, target.forward), direction, motionState: "catch-return", state: "held", holder: { personId: target.id, hand: event.catchHand }, flightProgress: 1, spinRadians, arcRiseMetres };
 }
 
 function horizontalDistanceToSegment(point, start, end) {
@@ -281,8 +315,7 @@ export function sampleGenericPassing3D(compiledPattern, playheadBeats, { camera 
   const pattern = requireCompiledPattern(compiledPattern);
   const playhead = Math.max(-2, Number.isFinite(Number(playheadBeats)) ? Number(playheadBeats) : -2);
   const normalizedPlayhead = playhead < 0 ? playhead : mod(playhead, pattern.loopBeats);
-  const inventory = sampleInventory(pattern, normalizedPlayhead);
-  const phase = normalizedPlayhead < 0 ? 0 : mod(normalizedPlayhead, 1);
+  const inventory = sampleInventory(pattern, playhead);
   const peopleBase = formationPeople(pattern);
   const collision = compiledBodyPathClearance(pattern, peopleBase);
   if (collision.minimumClearanceMetres < collision.requiredClearanceMetres) {
@@ -297,7 +330,7 @@ export function sampleGenericPassing3D(compiledPattern, playheadBeats, { camera 
         return [hand, { position: lerp(ready, sky, progress), influence: 1, mode: "count-in" }];
       }))];
     }))
-    : activeHandTargets(inventory, peopleBase, phase);
+    : activeHandTargets(inventory, peopleBase);
   const people = freeze(peopleBase.map((person) => {
     const left = handTargets.get(person.id).left;
     const right = handTargets.get(person.id).right;
@@ -322,7 +355,7 @@ export function sampleGenericPassing3D(compiledPattern, playheadBeats, { camera 
     return freeze({ ...item, position: freeze(balanceForGrip(fannedGrip, DOWN)), direction: DOWN, quaternion: freeze(quaternionForDirection(DOWN, person.forward)), state: "held", motionState: normalizedPlayhead < 0 ? "count-in" : "ready", holder: freeze({ personId: person.id, hand }) });
   });
   const eventClubs = inventory.airborne.map((event) => {
-    const pose = clubPoseForEvent(event, peopleBase, phase);
+    const pose = clubPoseForEvent(event, peopleBase);
     return freeze({ ...event, sourcePersonId: event.juggler, targetPersonId: event.target, ...pose, position: freeze(pose.position), direction: freeze(pose.direction), quaternion: freeze(pose.quaternion), holder: pose.holder ? freeze(pose.holder) : null });
   });
   const clubs = freeze([...heldClubs, ...eventClubs]);
@@ -338,6 +371,7 @@ export function sampleGenericPassing3D(compiledPattern, playheadBeats, { camera 
     model: "compiled-pattern-3d",
     executionPlan: pattern.executionPlan,
     playhead: normalizedPlayhead,
+    absolutePlayhead: playhead,
     cue: inventory.cue,
     camera: cameraFor(people, camera),
     clubs,

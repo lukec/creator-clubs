@@ -2,6 +2,48 @@
 
 Last updated: 2026-08-05 PDT
 
+## 2026-08-05 PDT result: Passing Lab executes semantic crossings and persistent double throws
+
+Passing Lab's compiled event contract now uses Luke's hand vocabulary directly:
+`straight` catches in the opposite hand (right-to-left or left-to-right), while
+`crossing` catches in the same hand. Performer `target` remains the independent
+formation route, so a star chord or audience-view line crossing no longer
+silently changes hand technique. Compiler version 3 rejects path/catch-hand
+contradictions and any two events that arrive at the same performer hand on the
+same wrapped beat.
+
+The ten-club directed triangle now declares each pass as a double in pattern
+data: two flight beats, 2.5 end-over-end rotations, and twice the generic
+single-pass arc rise. Playback keeps those club tokens airborne across the next
+beat and processes a catch before a same-boundary launch. Generic executor
+version 4 consumes each event's duration, spin, height, path, and catch hand;
+the animation engine still has no pattern-ID branch. The initial-allocation
+compiler also accounts for clubs that remain airborne when the next hand action
+begins. Self throws remain singles by default even when a pattern's passes are
+doubles; a rare non-single self requires an explicit override on that event.
+
+The old catalogue had 50 compiled events labelled `crossing` while catching in
+the opposite hand. Those labels came from target geometry, not verified hand
+technique, so round and star generators now default to explicit straights. The
+Double PPS cross-feed's four authored lateral exchanges are explicit crossing
+singles (eight after mirroring), which removes its duplicate-arrival failures.
+That exact cross-feed hand choice is a model-driven schedule correction and
+remains a useful physical-review point rather than a claim of measured teaching
+practice.
+
+**Verified local state:** all 48 cards compile with 336 straight passes, eight
+crossing passes, no semantic mismatch, and no duplicate arrival slot. The web
+suite passes 111/111 after a clean bundle rebuild. A separate five-loop stress
+run sampled 4,100 generic frames without losing or duplicating a club. Rendered
+desktop review showed the triangle double remaining high across the intervening
+beat and four same-hand cross-feed throws in flight; a 390x844 triangle review
+kept all three inward-facing performers, the high double, controls, and facts
+inside the mobile layout.
+
+**Next action:** publish the synchronized v20 page, bundle, compiler, library,
+playback, and model files to `luk.ec/passing-lab/`, wait for the exact Pages
+commit, then repeat cache-busted public desktop/mobile checks.
+
 ## 2026-08-05 PDT result: Passing Lab compiles one front-facing actor frame for every pattern
 
 The generic Passing Lab executor no longer reinterprets formation headings

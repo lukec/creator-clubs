@@ -1,4 +1,4 @@
-import { getPassingPattern } from "./passing-library.mjs?build=orientation-plan-v19";
+import { getPassingPattern } from "./passing-library.mjs?build=throw-semantics-v20";
 
 // This is a deliberately narrow physical path. The wider Passing Lab catalogue
 // remains schedule-viewer data; only the four canonical face-to-face

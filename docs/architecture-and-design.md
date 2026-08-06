@@ -25,27 +25,36 @@ animations:
 pattern card in passing-library.mjs
   -> passing-pattern-compiler.mjs validates and completes the hand period
   -> executionPlan plus explicit events
-  -> passing-playback.mjs assigns and moves persistent club tokens
-  -> passing-generic-3d.mjs samples hands, clubs, paths, and spin
+  -> passing-playback.mjs assigns and moves persistent multi-beat club tokens
+  -> passing-generic-3d.mjs samples hands, clubs, paths, duration, height, and spin
   -> passing-four-count-stage.mjs renders the sampled state
 ```
 
 The page passes the selected compiled pattern object into the stage. The
 generic model does not import the catalogue, inspect a pattern ID, or contain a
 PPS branch. It reads performer positions, throw/catch hands, target, pass/self
-kind, spin count, and timing from the compiled data. Pattern-specific teaching
-information should therefore be represented as data for technique, placement,
-or route overrides. A dedicated sampler is justified only when a narrower
+kind, semantic path, throw type, flight duration, height multiplier, and spin
+count from the compiled data. Pattern-specific teaching information should
+therefore be represented as data for technique, placement, route, or throw
+profile overrides. A dedicated sampler is justified only when a narrower
 pattern family has materially stronger physical/anatomical validation.
 
 The compiler requires one explicit action per performer per beat for normal
-patterns and rejects unknown performers, hands, targets, actions, or duplicate
-beat slots. A notation cycle that is not hand-periodic is followed by its
-opposite-hand continuation. This is why the three-symbol PPS notation `P P S`
-executes as six throws: `P-right, P-left, S-right, P-left, P-right, S-left`.
-The compiler derives the minimum safe initial allocation per hand from the
-whole execution cycle. Playback then throws only the token actually present in
-the declared hand; it cannot quietly borrow from the other hand. The retained
+patterns and rejects unknown performers, hands, targets, actions, throw types,
+or duplicate beat slots. A straight pass must arrive in the opposite hand
+(right-to-left or its left-to-right mirror); a crossing pass must arrive in the
+same hand (right-to-right or left-to-left). The target performer owns formation
+topology independently: star chords and other audience-view line crossings do
+not imply a crossing hand path.
+
+A notation cycle that is not hand-periodic is followed by its opposite-hand
+continuation. This is why the three-symbol PPS notation `P P S` executes as six
+throws: `P-right, P-left, S-right, P-left, P-right, S-left`. After completing
+that execution period, the compiler indexes each non-hold arrival by wrapped
+beat, target performer, and catch hand. Two clubs may not occupy the same
+arrival slot. It also derives the minimum safe initial allocation per hand from
+the whole cycle. Playback throws only the token actually present in the
+declared hand; it cannot quietly borrow from the other hand. The retained
 non-conserving Stage V visual study is explicitly exempt and remains labelled
 `visual-study`.
 
@@ -60,10 +69,14 @@ receiver's. The model consumes that frame for hands, paths, gaze, and a yaw that
 maps the person mesh's local `-Z` front to the same world forward. Neither the
 renderer nor a camera is allowed to reinterpret the angle convention.
 
-An active event is not the same as an airborne club. During the first part of a
-beat the hand and club are still connected in the upward/inward load; during
+An active event is not the same as a newly launched or airborne club. Playback
+uses an absolute-playhead, persistent token ledger: it settles launches and
+arrivals in chronological order, then retains each in-flight token until its
+declared duration completes. A double launched on the preceding beat can remain
+airborne while the current beat begins new hand loads. During the first part of
+a throw the hand and club are still connected in the upward/inward load; during
 the final part they are connected in the catch return. Samples expose both the
-active instruction and the actual held/airborne state so UI, accessibility,
+active instructions and the actual held/airborne state so UI, accessibility,
 and runtime diagnostics remain truthful.
 
 That presentation contract must not erase the difference between two data
@@ -75,10 +88,10 @@ contracts:
   participant-eye cameras.
 - `sampleGenericPassing3D` is the compiled-pattern executor for the other 44
   cards. It owns exact declared inventory, formation coordinates and facing,
-  event targets, pass/self paths, articulated visual gestures, and performer
-  camera placement. It enforces a conservative `0.30 m` horizontal grip-path
-  distance from each performer centreline, but does not claim swept-full-club
-  or biomechanical collision validation.
+  event targets, semantic pass/self paths, declared throw profiles, articulated
+  visual gestures, and performer camera placement. It enforces a conservative
+  `0.30 m` horizontal grip-path distance from each performer centreline, but
+  does not claim swept-full-club or biomechanical collision validation.
 
 The stage renderer selects between those samplers behind one stable canvas and
 resizes reusable person/club rigs to the current card. Accessibility and
@@ -91,12 +104,18 @@ generic executor, physical selector, and generated stage bundle together. This
 prevents a returning browser from combining a new executor with a cached old
 pattern object that lacks the required execution-plan fields.
 
-Both contracts use one legible pass vocabulary: ready outside, hand and club
-travel upward/inward together, release near the torso midline at `0.14 m`
-lateral offset, and catch farther outside at `0.34 m`. In the detailed model a
-`0.75 m` down-axis release balance pivot places the actual seam grip at about
-`1.01 m`, near the belly button. These numeric anchors are rendering policy,
-not anthropometric measurements.
+Both contracts use one legible pass gesture: ready outside, hand and club travel
+upward/inward together, release near the torso midline at `0.14 m` lateral
+offset, and catch farther outside at `0.34 m`. The generic event contract keeps
+the named `throwType` alongside its resolved flight duration, rotation count,
+and arc-height multiplier. The directed ten-club triangle explicitly declares
+each pass as a two-beat double with 2.5 rotations and twice the single-pass arc
+rise; the compiler does not infer this from club count or pattern ID. Self
+throws independently default to singles; only an explicit per-event override
+represents one of the rare non-single selfs. In the detailed model a `0.75 m`
+down-axis release balance pivot places the actual seam grip at about `1.01 m`,
+near the belly button. These numeric anchors and the generic single/double
+profiles are rendering policy, not anthropometric or ballistic measurements.
 
 ## Public repository is the durable source of truth
 
