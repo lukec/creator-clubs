@@ -53,6 +53,18 @@ clubs, leaving one extra held in this simplified steady-state model. The data's
 pattern-definition questions for Luke rather than reasons to invent hidden
 per-pattern behavior in the executor.
 
+**Publication:** source commit `c4d074c` is pushed on public `clubs` `main`.
+Only the seven changed `passing-lab/` site files were staged in the Pages
+repository; site commit `b506611` reached status `built`. The first build
+observed after the push still targeted the preceding Wanix commit `ebce587`, so
+it was not accepted as Passing publication; an explicit Pages build request
+then built the exact new site commit. Cache-busted public page, bundle, physical
+selector, generic model, library, compiler, and playback bytes match the staged
+files. Public browser checks repeated the directed-triangle audience view and a
+390x844 five-person star. The triangle reported ten clubs, three airborne, and
+`500 mm` minimum centreline clearance; the star reported fifteen clubs, five
+airborne, and `510 mm`. There was no horizontal overflow or browser diagnostic.
+
 ## 2026-08-05 PDT — printable two-page Motion Lab V6 physical evaluation sheet
 
 **Question:** create a polished handout for tonight's physical evaluation that

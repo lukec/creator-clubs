@@ -26,6 +26,15 @@ view. Each formation faced inward, reported its complete inventory, and stayed
 outside the guard; the smallest catalogue clearance is `0.376 m`. A 390x844
 five-person star check had no horizontal overflow or browser diagnostics.
 
+**Verified publication:** Pages commit `b506611` reached status `built`.
+Cache-busted public bytes for the page, generated stage bundle, physical
+selector, generic model, library, compiler, and playback module match the staged
+site files. At <https://luk.ec/passing-lab/?v=b506611>, the directed triangle
+showed three performers, ten clubs, three mid-pass airborne clubs, and `500 mm`
+minimum reported body-path clearance. A public 390x844 five-person star check
+showed five performers, fifteen clubs, five airborne throws, `510 mm` clearance,
+no horizontal overflow, and no browser diagnostics.
+
 ## 2026-08-05 PDT result: two-page Motion Lab V6 physical evaluation handout is ready
 
 For tonight's physical evaluation, `output/pdf/motion-lab-v6-physical-evaluation.pdf`

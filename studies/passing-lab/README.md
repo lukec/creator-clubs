@@ -131,6 +131,13 @@ front hemisphere, rendered local-front agreement, first-person gaze, body-path
 clearance, and finite/inventory sampling for every card. Rendered checks covered
 triangle, V, square, and star formations plus mobile and first-person views.
 
+Pages commit `b506611` is built and publicly verified at
+<https://luk.ec/passing-lab/?v=b506611>. Public bytes match the staged page,
+bundle, physical selector, generic model, library, compiler, and playback
+module. Audience triangle and 390x844 five-person-star canaries retained their
+declared inventories, simultaneous throws, and body-path clearance with no
+horizontal overflow or browser diagnostics.
+
 ### Prior viewer revision: v18 compiled pattern execution
 
 The selected card is now compiled before playback and fed to the generic model
