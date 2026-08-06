@@ -15,11 +15,19 @@ test("the all-pattern 3D stage replaces the initial 2D canvas while semantic sta
   );
   assert.doesNotMatch(page, /<canvas id="stage"/, "there is no initial 2D diagram surface");
   assert.match(page, /function hasThreeStage\(\)/, "every playable card is routed through the shared 3D stage capability");
-  assert.match(page, /compiled-pattern 3D executor/, "non-dedicated cards identify the shared compiled executor");
-  assert.match(page, /card supplies a compiled execution plan/, "the page describes the pattern-data to executor boundary");
-  assert.match(page, /throw types, pass paths, flight durations, token cycles, spin counts, height multipliers/, "the shared executor help exposes event-defined throw semantics");
-  assert.match(page, /declared double/, "pattern facts summarize declared double passes");
-  assert.match(page, /const semantics = \(entry\)/, "visible and semantic event descriptions share one throw formatter");
+  assert.match(page, /Published cards link their source/, "the viewer explains its source-first hierarchy concisely");
+  assert.match(page, /id="source-line" class="source-line"/, "the selected pattern has a visible source line");
+  assert.match(page, /sourceLine\.append\('Paraphrased from '\)/, "published descriptions link directly to their supporting material");
+  assert.match(page, /entry\.sourceMaterial\.description/, "catalogue cards lead with the source or origin description");
+  assert.match(page, /Passing Lab study · no published source/, "authored studies cannot impersonate published patterns");
+  assert.match(page, /\[`\$\{entry\.peopleCount\} people`, `\$\{entry\.clubCount\} clubs`\]/, "catalogue cards retain only immediately useful counts");
+  assert.doesNotMatch(page, /\[`\$\{entry\.peopleCount\} people`, entry\.formation, entry\.difficulty, entry\.basis/, "catalogue cards no longer expose internal classification tags");
+  assert.match(page, /<details id="technical-details" class="technical"><summary>Technical details<\/summary>/, "implementation nomenclature is closed behind an optional disclosure");
+  assert.doesNotMatch(page, /<details id="technical-details" class="technical" open/, "technical details stay closed by default");
+  assert.match(page, /id="model-notes" class="technical-note"/, "executor and motion notes live inside the technical disclosure");
+  assert.match(page, /<div class="current-action"><h3>What happens now<\/h3>/, "the useful current action remains visible");
+  assert.match(page, /chip\.textContent = describe\(entry\)/, "visible current actions use the plain-language formatter");
+  assert.match(page, /const semantics = \(entry\)/, "detailed throw semantics remain available to assistive and technical views");
   assert.match(page, /chip\.setAttribute\('aria-label', accessibleDetail\)/, "event chips expose their complete throw profile accessibly");
   assert.match(page, /entry\.flightBeats/, "event detail includes declared flight duration");
   assert.match(page, /entry\.tokenCycleBeats/, "event detail includes declared token recurrence");
@@ -27,7 +35,7 @@ test("the all-pattern 3D stage replaces the initial 2D canvas while semantic sta
   assert.match(page, /entry\.heightMultiplier/, "event detail includes declared height multiplier");
   assert.match(page, /renderer\.render\(physicalPlayhead, \{ pattern, camera:/, "the page feeds the selected compiled pattern object into the model");
   assert.match(page, /sample\.activeEvents \|\| sample\.airborne/, "the current beat remains visible during load, flight, and catch phases");
-  assert.match(page, /Every playable pattern uses the shared 3D stage/, "the transport no longer advertises a 2D fallback");
+  assert.match(page, /Scrubbing pauses playback\./, "the visible transport help stays concise");
   assert.match(page, /id="timeline-position"/, "the visible transport status remains below the stage");
   assert.match(page, /\$\('#stage-description'\)\.textContent =/, "the semantic description remains populated during playback");
   assert.match(page, /\$\('#stage-status'\)\.textContent =/, "screen-reader status remains available outside the stage");
@@ -44,7 +52,7 @@ test("the all-pattern 3D stage replaces the initial 2D canvas while semantic sta
 });
 
 test("the static Passing Lab module graph uses one cache revision", async () => {
-  const revision = "causal-pps-v21";
+  const revision = "source-descriptions-v22";
   const files = await Promise.all([
     fs.readFile(pageUrl, "utf8"),
     fs.readFile(sourceUrl("passing-library.mjs"), "utf8"),

@@ -1,4 +1,4 @@
-import { sampleInventory } from "./passing-playback.mjs?build=causal-pps-v21";
+import { sampleInventory } from "./passing-playback.mjs?build=source-descriptions-v22";
 
 export const GENERIC_PASSING_3D_VERSION = 4;
 export const GENERIC_PASSING_3D_TIMING = Object.freeze({

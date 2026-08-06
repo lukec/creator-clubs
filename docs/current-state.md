@@ -93,6 +93,39 @@ to the committed Pages checkout. Live browser QA at
 beat `1.67` had four airborne/two hand-connected clubs before beat `1.83`
 caught the incoming passes with two airborne/four hand-connected clubs.
 
+## 2026-08-05 PDT result: Passing Lab foregrounds source descriptions and hides model nomenclature
+
+**Verified inventory:** none of the 48 existing card summaries was copied
+source prose. Fifteen cards are marked source-backed, 32 are Passing Lab-authored
+schedule studies, and one is Luke-specified Stage choreography. Five left-start
+variations and three round studies previously inherited broad research links
+despite having no pattern-specific published description. The directed
+ten-club triangle incorrectly cited an unrelated V-feed page.
+
+**Implementation:** library version 4 attaches an immutable `sourceMaterial`
+record to every card. Published cards require a plain-language paraphrase plus
+a pattern-specific source link. Passing Lab and Luke-authored descriptions are
+labelled as such and cannot claim a published reference. The triangle now links
+the Compendium's ten-club triangle section, whose description calls for
+base-to-base singles and point/base doubles; because the current animation
+still declares every pass as a double, the card displays a review warning
+instead of claiming that the model matches the source.
+
+The primary viewer now shows title, source/origin description, direct source
+link, animation, controls, and plain-language current actions. Catalogue cards
+show only people and club counts alongside their description and origin.
+Inventory, BPM derivation, execution/token cycles, throw profiles, model labels,
+and research notes remain available under a closed **Technical details**
+disclosure.
+
+**Verified local state:** the generated bundle rebuilds, the full web suite
+passes 116/116, and `git diff --check` passes. Desktop browser review showed the
+PPS source summary/link without the prior fact wall. At 390×844, the published
+PPS card, an authored five-person Feast study, and the corrected triangle source
+all fit without horizontal overflow; technical details remained closed by
+default and opened on request. Publication is pending the exact `main` and
+Pages commits.
+
 ## 2026-08-05 PDT result: Passing Lab compiles one front-facing actor frame for every pattern
 
 The generic Passing Lab executor no longer reinterprets formation headings

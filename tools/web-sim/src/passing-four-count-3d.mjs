@@ -1,4 +1,4 @@
-import { PASSING_PATTERNS, getPassingPattern } from "./passing-library.mjs?build=causal-pps-v21";
+import { PASSING_PATTERNS, getPassingPattern } from "./passing-library.mjs?build=source-descriptions-v22";
 
 // This is a deliberately narrow physical path. The wider Passing Lab catalogue
 // remains on the compiled-pattern executor unless its declarative data proves

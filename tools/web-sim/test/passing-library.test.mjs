@@ -9,6 +9,34 @@ test("Passing Lab has independently declared schedules from two through five peo
   for (const pattern of PASSING_PATTERNS) assert.equal(validatePassingPattern(pattern), null, pattern.id);
 });
 
+test("every card foregrounds an honest source or authored description", () => {
+  assert.deepEqual(
+    Object.fromEntries(["published", "passing-lab", "luke"].map((kind) => [kind, PASSING_PATTERNS.filter((pattern) => pattern.sourceMaterial.kind === kind).length])),
+    { published: 15, "passing-lab": 32, luke: 1 },
+  );
+  PASSING_PATTERNS.forEach((pattern) => {
+    const material = pattern.sourceMaterial;
+    assert.ok(Object.isFrozen(material), `${pattern.id} source material is immutable`);
+    assert.ok(material.description.length > 20, `${pattern.id} has a useful human description`);
+    assert.doesNotMatch(material.description, /\bPSSS?\b|token cycle|compiled|executor|flightBeats|handPeriod/i, `${pattern.id} description avoids implementation shorthand`);
+    if (material.kind === "published") {
+      assert.ok(material.references.length > 0, `${pattern.id} links its pattern-specific published source`);
+      material.references.forEach((reference) => {
+        assert.match(reference.title, /\S/);
+        assert.match(reference.url, /^https:\/\//);
+      });
+    } else {
+      assert.deepEqual(material.references, [], `${pattern.id} does not imply that an authored description came from a publication`);
+    }
+  });
+
+  const triangle = getPassingPattern("directed-triangle-waltz");
+  assert.match(triangle.sourceMaterial.references[0].url, /passingpatternscompendium\.pdf#page=47$/);
+  assert.match(triangle.sourceMaterial.description, /exchange singles.*point are doubles/);
+  assert.match(triangle.sourceMaterial.note, /animation still needs review/);
+  assert.match(triangle.provenance.references[0].url, /passingpatternscompendium\.pdf#page=47$/);
+});
+
 test("Passing Lab stores events, poses, count-in, and target roles explicitly", () => {
   const pattern = getPassingPattern("v-feed-2-4");
   assert.deepEqual(pattern.countIn.map((cue) => cue.name), ["Sky", "Earth", "Pass"]);

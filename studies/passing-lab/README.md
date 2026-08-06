@@ -46,8 +46,12 @@ Technique, route, throw profile, and placement exceptions belong in the pattern
 data unless they justify a separately validated physical sampler.
 
 V1 contains twelve playable cards in each 2-, 3-, 4-, and 5-person section.
-The catalogue distinguishes **source-backed** timing/terminology cards from
-**original schedule studies** and explicitly labelled start-phase variations.
+Every card now exposes one visible description/origin contract. Fifteen cards
+have an attributed plain-language summary of pattern-specific published source
+material, 32 are explicitly labelled **Passing Lab studies**, and the retained
+Stage V opening is labelled **Luke-specified choreography**. Published cards
+link the exact supporting page or PDF section; authored cards do not borrow a
+broad research link and present it as their own source.
 Its known-pattern core includes 1-, 2-, 3-, and 4-count two-person schedules;
 a canonical 3-person V 2-count/4-count feed; the existing Stage V opening as a
 non-canonical visual variant; a directed 3-count triangle; a four-person PPS
@@ -62,11 +66,15 @@ positive `x` audience-right; `z = 0` is upstage/backdrop and larger `z` is
 downstage/toward the audience. Facing angles use `0° = +z/downstage`,
 `90° = +x/audience-right`, and positive rotation around `+y`. Target order is
 always the event's literal
-`target` ID, not an inferred visual direction. Each pattern has brief factual
-provenance links; no prose, diagrams, graphics, source code, or bulk pattern
-data were copied from those sites. Modern Passing is visibly linked where its
-CC-BY teaching material informed terminology/timing facts; the library does not
-reproduce its teaching material.
+`target` ID, not an inferred visual direction. Published-source descriptions
+are concise Passing Lab paraphrases with direct attribution; no prose,
+diagrams, graphics, source code, or bulk pattern data were copied from those
+sites. Modern Passing is visibly linked where its CC-BY teaching material
+informed the summary and timing. The triangle card's old V-feed citation was
+incorrect and now points to the Compendium's ten-club triangle section. That
+source describes base-to-base singles and point-to-base doubles, while the
+current animation still declares all passes as doubles, so the visible card
+warns that its throw split needs review.
 
 The normal URL hash stores only the selected pattern and neutral club colour.
 It never uses a `data:` URL.
@@ -76,7 +84,11 @@ It never uses a `data:` URL.
 The active viewer is first in the document: it remains sticky beside the
 catalogue on desktop, and a phone selection scrolls/focuses the active title.
 It provides beat stepping, a beat-labelled scrubber, 0.25×/0.5×/1× playback,
-and Reset replay of Sky/Earth/Pass.
+and Reset replay of Sky/Earth/Pass. The normal reading path is now title,
+source/origin description, source link, animation, controls, and a
+plain-language **What happens now** line. Inventory, timing derivation,
+execution/token cycles, throw profiles, model identity, and research/legal
+notes sit under a closed **Technical details** disclosure.
 
 `passing-playback.mjs` makes the declared `clubCount` visible rather than
 treating it as metadata only. Its deterministic ledger follows each unique club
@@ -127,7 +139,30 @@ compiled-pattern 3D executor: it renders their declared people, formation,
 target routes, and entire club inventory, but does not claim the detailed
 model's physical/collision coverage.
 
-### Current viewer revision: v21 causal PPS token ownership
+### Current viewer revision: v22 source-first pattern descriptions
+
+The viewer no longer leads with compiler and model nomenclature. Its catalogue
+cards show title, source/origin description, origin, people, and clubs. The
+active card links published source material directly; an authored card instead
+says that no published description is mapped to that exact schedule. Visible
+current-action chips use ordinary sentences such as “Left makes a right-hand
+pass to Right.” Detailed catch hands, flight beats, token cycles, rotations,
+height multipliers, inventory state, and executor notes remain available but
+collapsed.
+
+`sourceMaterial` is validated for all 48 playable cards. The 15 published cards
+must have a nonempty pattern-specific reference; 32 Passing Lab studies and one
+Luke-specified card cannot claim published references. Descriptions reject the
+old `PSS`/`PSSS` shorthand and implementation terms. Desktop and 390×844 local
+browser review showed direct source links, an honest no-source authored card,
+the closed technical disclosure, no horizontal overflow, and the triangle's
+visible source/animation mismatch warning. The 116-test suite and bundle build
+pass. The static module graph uses cache revision `source-descriptions-v22`.
+
+Publication evidence will be added after the exact source and Pages commits
+build and pass cache-busted public verification.
+
+### Prior viewer revision: v21 causal PPS token ownership
 
 Luke's catch invariant is now executable: after the opening release, no two
 live clubs may be attached to the same performer/hand. The visible PPS defect

@@ -1,6 +1,6 @@
-import { compilePassingPattern, passingCatchHand } from "./passing-pattern-compiler.mjs?build=causal-pps-v21";
+import { compilePassingPattern, passingCatchHand } from "./passing-pattern-compiler.mjs?build=source-descriptions-v22";
 
-export const PASSING_LIBRARY_VERSION = 3;
+export const PASSING_LIBRARY_VERSION = 4;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const freeze = (value) => Object.freeze(value);
@@ -54,6 +54,74 @@ const terminologySources = freeze([
   freeze({ title: "Modern Passing — Feeds", url: "https://modernpassing.com/5b-feeds.html", use: "feed-role research only" }),
   freeze({ title: "Passing Patterns Compendium", url: "https://www.jugglingedge.com/pdf/passingpatternscompendium.pdf", use: "timing and terminology research only" }),
 ]);
+
+const triangleTenClubSource = freeze({
+  title: "Passing Patterns Compendium — Triangle 10-club 3-counts",
+  url: "https://www.jugglingedge.com/pdf/passingpatternscompendium.pdf#page=47",
+  use: "pattern description and throw-height research",
+});
+const squareSource = (section) => freeze({
+  title: `Passing Patterns Compendium — ${section}`,
+  url: "https://www.jugglingedge.com/pdf/passingpatternscompendium.pdf#page=63",
+  use: "pattern description and role research",
+});
+const starSource = freeze({
+  title: "Passing Patterns Compendium — Star",
+  url: "https://www.jugglingedge.com/pdf/passingpatternscompendium.pdf#page=76",
+  use: "formation, target, and rhythm research",
+});
+
+const sourceMaterial = (kind, label, description, references = [], note = "") => freeze({
+  kind,
+  label,
+  description,
+  references: freeze(references.map((reference) => reference)),
+  note,
+});
+
+// These are short Passing Lab paraphrases, not copied source prose. Keeping the
+// description and its exact supporting reference together prevents a broad
+// terminology link from being presented as a pattern-specific source.
+const PUBLISHED_SOURCE_MATERIAL = freeze({
+  "one-count": sourceMaterial("published", "Source summary", "Both jugglers pass every throw together, alternating right-hand and left-hand passes.", [terminologySources[0]]),
+  "two-count": sourceMaterial("published", "Source summary", "Both jugglers pass every right-hand throw and keep every left-hand throw as a self.", [terminologySources[0]]),
+  "three-count": sourceMaterial("published", "Source summary", "Both jugglers repeat pass, self, self. Because the phrase has three beats, the passes alternate hands.", [terminologySources[0]]),
+  "four-count": sourceMaterial("published", "Source summary", "Both jugglers repeat pass, self, self, self, so every other right-hand throw is a pass.", [terminologySources[0]]),
+  pps: sourceMaterial("published", "Source summary", "Both jugglers repeat pass, pass, self.", [terminologySources[0]]),
+  bookends: sourceMaterial("published", "Source summary", "Both jugglers repeat pass, pass, self, pass, self: a five-beat rhythm with three passes and two selfs.", [terminologySources[0]]),
+  countdown: sourceMaterial("published", "Source summary", "Both jugglers repeat three-count, two-count, one-count, then two-count: pass-self-self, pass-self, pass-pass-self.", [terminologySources[0]]),
+  "v-feed-2-4": sourceMaterial("published", "Source summary", "One feeder alternates right-hand passes between two receivers. Each receiver passes every fourth throw, offset from the other by two throws.", [terminologySources[1], terminologySources[2]]),
+  "directed-triangle-waltz": sourceMaterial("published", "Source summary", "Three jugglers run a 10-club three-count. The two base jugglers exchange singles; passes between either base juggler and the point are doubles.", [triangleTenClubSource], "The current animation still needs review against this source's single/double split."),
+  "double-pps-cross-feed": sourceMaterial("published", "Source summary", "Each juggler feeds the two people facing them. One opposite pair repeats pass-pass-self while the other repeats pass-self-pass.", [squareSource("PPS Cross Feed")]),
+  "three-count-accommodation": sourceMaterial("published", "Source summary", "Each juggler passes to two others: A runs three-count, B pass-pass-self, C right-handed two-count, and D left-handed two-count.", [squareSource("3-count Accommodation")]),
+  "five-star-one": sourceMaterial("published", "Source summary", "Five jugglers form a star and pass every throw to the person two places to their right.", [starSource]),
+  "five-star-two": sourceMaterial("published", "Source summary", "Five jugglers use the same star route, alternating a pass with a self.", [starSource]),
+  "five-star-three": sourceMaterial("published", "Source summary", "Five jugglers use the same star route and repeat pass, self, self.", [starSource]),
+  "five-star-four": sourceMaterial("published", "Source summary", "Five jugglers use the same star route and repeat pass, self, self, self.", [starSource]),
+});
+
+const plainDescription = (summary) => summary
+  .replace(/\bPSSS\b/g, "pass, self, self, self")
+  .replace(/\bPSS\b/g, "pass, self, self")
+  .replace(/event truth/g, "pattern");
+
+function sourceMaterialFor(pattern) {
+  if (pattern.basis === "source-backed") {
+    const material = PUBLISHED_SOURCE_MATERIAL[pattern.id];
+    if (!material) throw new RangeError(`${pattern.id}: source-backed card needs a pattern-specific source description`);
+    return material;
+  }
+  if (pattern.basis === "user-specified visual variant") {
+    return sourceMaterial("luke", "Luke-specified description", plainDescription(pattern.summary));
+  }
+  return sourceMaterial(
+    "passing-lab",
+    "Passing Lab description",
+    plainDescription(pattern.summary),
+    [],
+    "No published description is currently mapped to this exact schedule study.",
+  );
+}
 
 function facingPair(id, title, sequence, summary, terminology, difficulty = "easy", basis = "source-backed") {
   const people = [
@@ -131,7 +199,7 @@ const V_EVENTS = freeze([
   event(3, "receiver-b", "right", "self", "receiver-b", { path: "self" }),
 ]);
 
-export const PASSING_PATTERNS = freeze([
+const COMPILED_PASSING_PATTERNS = freeze([
   facingPair("one-count", "1-count · Ultimates", [{ kind: "pass", hand: "right" }, { kind: "pass", hand: "left" }], "A facing-pair all-pass schedule; both pass right, then left.", "1-count / Ultimates"),
   facingPair("two-count", "2-count · Everies", [{ kind: "pass", hand: "right" }, { kind: "self", hand: "left" }], "A facing-pair schedule: a same-hand pass followed by a self-throw.", "2-count / Everies"),
   facingPair("three-count", "3-count · Waltz", [{ kind: "pass", hand: "right" }, { kind: "self", hand: "left" }, { kind: "self", hand: "right" }, { kind: "pass", hand: "left" }, { kind: "self", hand: "right" }, { kind: "self", hand: "left" }], "A facing-pair waltz schedule: pass, self, self, with alternating pass hands across six beats.", "3-count / Waltz"),
@@ -171,7 +239,7 @@ export const PASSING_PATTERNS = freeze([
   }),
   scheduledPattern({
     id: "directed-triangle-waltz", title: "Directed 3-count triangle", people: TRIANGLE_PEOPLE, formation: "triangle", clubCount: 10, tempo: 100,
-    summary: "A three-person PSS triangle clock with staggered pass phases A→B→C→A.", terminology: "3-count triangle", difficulty: "medium", basis: "source-backed", references: [terminologySources[1]],
+    summary: "A three-person PSS triangle clock with staggered pass phases A→B→C→A.", terminology: "3-count triangle", difficulty: "medium", basis: "source-backed", references: [triangleTenClubSource],
     // The established card declares ten clubs, so retain that actual inventory
     // instead of silently normalising it to three per person.
     inventoryAllocation: freeze({ a: 4, b: 3, c: 3 }),
@@ -285,6 +353,11 @@ export const PASSING_PATTERNS = freeze([
   }),
 ]);
 
+export const PASSING_PATTERNS = freeze(COMPILED_PASSING_PATTERNS.map((pattern) => freeze({
+  ...pattern,
+  sourceMaterial: sourceMaterialFor(pattern),
+})));
+
 export const PASSING_COMING_NEXT = freeze([
   freeze({ peopleCount: 5, formation: "pentagon", title: "Chocolate Box", difficulty: "hard", reason: "Named pattern retained for later: its exact event routing/start convention has not been independently verified for this library yet." }),
   freeze({ peopleCount: 3, formation: "triangle", title: "Triangle circuit / pair / self", difficulty: "medium", reason: "Keep as a future named card once its preferred community start convention is independently validated." }),
@@ -298,6 +371,10 @@ export function eventsAtBeat(pattern, beat) {
 }
 export function validatePassingPattern(pattern) {
   const performerIds = new Set(pattern.performers.map((person) => person.id));
+  if (!pattern.sourceMaterial || !["published", "passing-lab", "luke"].includes(pattern.sourceMaterial.kind) || !pattern.sourceMaterial.description?.trim()) return "sourceMaterial must identify a published, Passing Lab, or Luke-specified description";
+  if (!Array.isArray(pattern.sourceMaterial.references)) return "sourceMaterial references must be an array";
+  if (pattern.sourceMaterial.kind === "published" && pattern.sourceMaterial.references.length < 1) return "published sourceMaterial needs a reference";
+  if (pattern.sourceMaterial.kind !== "published" && pattern.sourceMaterial.references.length) return "authored sourceMaterial cannot claim a published reference";
   if (!Number.isInteger(pattern.loopBeats) || pattern.loopBeats < 1) return "loopBeats must be a positive integer";
   if (!Number.isInteger(pattern.clubCount) || pattern.clubCount < 1) return "clubCount must be a positive integer";
   if (!Array.isArray(pattern.countIn) || pattern.countIn.length < 3) return "count-in must contain Sky, Earth, and Pass";

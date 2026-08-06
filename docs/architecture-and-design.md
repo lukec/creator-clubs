@@ -40,6 +40,18 @@ therefore be represented as data for technique, placement, route, or throw
 profile overrides. A dedicated sampler is justified only when a narrower
 pattern family has materially stronger physical/anatomical validation.
 
+The playback data and the teaching copy are separate contracts. Every card
+must expose `sourceMaterial` with one of three honest origins: an attributed
+published-source summary, a Passing Lab-authored study description, or
+Luke-specified choreography. Published summaries require a pattern-specific
+reference; authored descriptions cannot carry a reference that would make them
+look published. The primary viewer leads with that description and source or
+origin. Club inventory, BPM derivation, compiler cycles, token recurrence,
+throw profiles, and model identity remain available under a closed **Technical
+details** disclosure rather than competing with the pattern explanation.
+Source descriptions are concise paraphrases with direct links, not copied
+source prose.
+
 The compiler requires one explicit action per performer per beat for normal
 patterns and rejects unknown performers, hands, targets, actions, throw types,
 or duplicate beat slots. A straight pass must arrive in the opposite hand
@@ -119,9 +131,13 @@ the named `throwType` alongside its resolved flight duration, rotation count,
 token-cycle policy, and arc-height multiplier. A normal six-club facing-pair
 single is therefore `flightBeats: 1` and `tokenCycleBeats: 3`; changing the
 former to three would create a slow three-beat trajectory rather than causal
-siteswap-3 ownership. The directed ten-club triangle explicitly declares
+siteswap-3 ownership. The current directed ten-club triangle data declares
 each pass as a two-beat double with 2.5 rotations and twice the single-pass arc
-rise; the compiler does not infer this from club count or pattern ID. Self
+rise. Its newly corrected Compendium source mapping instead describes singles
+between the two base jugglers and doubles between either base juggler and the
+point. The viewer flags that mismatch; the card is not source-conformant until
+its event data is reviewed. The compiler does not infer throw type from club
+count or pattern ID. Self
 throws independently default to singles; only an explicit per-event override
 represents one of the rare non-single selfs. In the detailed model a `0.75 m`
 down-axis release balance pivot places the actual seam grip at about `1.01 m`,

@@ -159,6 +159,46 @@ three-beat declared token cycle. A reset opening-cycle scrub showed four
 airborne/two hand-connected clubs at beat `1.67`, then two airborne/four
 hand-connected clubs after the catches at beat `1.83`.
 
+## 2026-08-05 PDT — source-first descriptions and a quieter Passing Lab viewer
+
+**Question:** show the original/source description for every pattern in terms a
+juggler can understand, and hide the compiler/model nomenclature that currently
+dominates the page.
+
+**Verified data audit:** the existing 48 summaries were all independently
+authored when the library was introduced; zero were original source prose.
+Fifteen cards were labelled source-backed, 32 were original Passing Lab studies,
+and one retained Luke-specified choreography. Only 14 of the source-backed cards
+had a relevant pattern-specific passage in their existing citations. The
+directed ten-club triangle cited the unrelated 2-count/4-count V-feed page.
+Eight authored cards also inherited broad background links that were not exact
+sources. Copying source text wholesale was rejected; published descriptions are
+short attributed paraphrases with direct links.
+
+**Implementation:** library version 4 gives every compiled card immutable
+`sourceMaterial` with a kind, human description, references, and optional review
+note. A published card without a pattern-specific link fails validation; an
+authored card carrying a published reference also fails. The 15 published
+descriptions cover the seven basic two-person rhythms, V 2-count/4-count feed,
+the corrected ten-club triangle section, PPS Cross Feed, 3-count Accommodation,
+and four Star rhythms. The remaining cards say **Passing Lab description** or
+**Luke-specified description** and do not imply external authorship.
+
+The visible page now leads with source/origin copy and a direct link. Catalogue
+tags were reduced to people and clubs. **What happens now** uses plain sentences;
+the BPM, inventory ledger, alternating-hand execution, token timing, throw
+profile, model identity, and research notes moved into a closed **Technical
+details** disclosure. The triangle source says the base jugglers exchange
+singles while point/base passes are doubles; its current all-double animation
+is therefore explicitly flagged for review.
+
+**Validation:** the bundle rebuild and full 116-test suite pass, including exact
+15/32/1 source-origin coverage and jargon-free human descriptions. Desktop and
+390×844 browser checks verified PPS source copy, the no-source label on an
+authored five-person Feast study, the corrected triangle PDF link/warning,
+closed/open technical disclosure behavior, and no horizontal overflow.
+Publication is pending the source commit and synchronized Pages deployment.
+
 ## 2026-08-05 PDT — compile formation facing once and prevent generic passes through bodies
 
 **Question:** make the remaining Passing Lab cards execute from declarative

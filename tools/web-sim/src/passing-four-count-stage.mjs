@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import { CREATOR_CLUB_DIMENSIONS, makeCreatorClubGeometries } from "./creator-club-geometry.mjs";
-import { getPassingPattern } from "./passing-library.mjs?build=causal-pps-v21";
+import { getPassingPattern } from "./passing-library.mjs?build=source-descriptions-v22";
 import {
   FOUR_COUNT_3D_PATTERN_ID,
   FOUR_COUNT_3D_SHOULDER_RIG_POLICY,
@@ -9,8 +9,8 @@ import {
   getFourCount3DCamera,
   sampleSelectedPassing3D,
   selectFourCount3DPattern,
-} from "./passing-four-count-3d.mjs?build=causal-pps-v21";
-import { sampleGenericPassing3D } from "./passing-generic-3d.mjs?build=causal-pps-v21";
+} from "./passing-four-count-3d.mjs?build=source-descriptions-v22";
+import { sampleGenericPassing3D } from "./passing-generic-3d.mjs?build=source-descriptions-v22";
 
 const METRES_TO_SCENE_UNITS = 10;
 // The desktop stage is wide, but a phone should retain an intelligible pair
