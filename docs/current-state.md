@@ -157,8 +157,19 @@ build, `git diff --check` passes, and the staged Glow Lab artifact is byte-equal
 to its generated source copy. Desktop and 390×844 browser checks navigated from
 the actual root links into both labs. The homepage and both lab wrappers had no
 horizontal overflow or browser warnings/errors; the new Glow Lab rendered its
-interactive optical model at both sizes. Public verification is pending the
-exact Pages commit.
+interactive optical model at both sizes.
+
+**Verified publication:** source commits `047d6e4` and `7ce920e` are pushed on
+public `clubs` `main`. Site commit `4873074` is pushed on the Pages repository's
+`master`. Its first automatic deploy and rerun built successfully but stalled
+during GitHub's documented [Pages deployment-lag
+incident](https://stspg.io/b0n00sx9z3ht); both stalled attempts were cancelled.
+An explicit build request for the unchanged commit produced workflow
+`31114535318`, and the exact Pages build reached `built` at
+`2026-08-06T15:18:01Z`. Cache-busted root, Glow Lab, and Motion Lab responses
+were byte-equal to the committed files. Public desktop and 390×844 browser
+checks clicked both root links, rendered the correct interactive destination,
+had no horizontal overflow, and reported no browser warnings/errors.
 
 ## 2026-08-05 PDT result: Passing Lab compiles one front-facing actor frame for every pattern
 

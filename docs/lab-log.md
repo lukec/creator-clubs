@@ -231,7 +231,25 @@ bundle build succeeds. The copied `/glow-lab/index.html` is byte-equal to the
 generated source artifact. Real browser navigation clicked each homepage link
 at desktop and 390×844 sizes, reached the correct page titles, rendered both
 interactive labs, and produced no horizontal overflow or browser diagnostics.
-Publication is pending the exact source and Pages commits.
+
+**Publication and failed path:** source commits `047d6e4` and `7ce920e` are on
+public `clubs` `main`; site commit `4873074` is on the Pages repository's
+`master`. Automatic workflow `31113178439` built the exact commit, but its
+deploy step remained in progress for more than ten minutes. Cancelling and
+rerunning that same workflow reproduced the deploy stall. During the failure,
+GitHub Status opened a [Pages deployment-lag
+incident](https://stspg.io/b0n00sx9z3ht), while the old homepage remained live
+and `/glow-lab/` correctly remained 404. Both stalled attempts were cancelled;
+no content commit was changed.
+
+The repository's direct Pages build endpoint then queued the unchanged commit
+as workflow `31114535318`. Its build and deploy succeeded, and the Pages API
+reported exact commit `48730741f1c5b7a5125d36922fd733ff1414ec54` as `built` at
+`2026-08-06T15:18:01Z`. Cache-busted public copies of the root homepage, Glow
+Lab, and Motion Lab matched the committed files byte-for-byte. Public desktop
+and 390×844 browser checks clicked **Glow Lab** and **Motion Lab** from the root,
+reached the correct titles and interactive renderers, showed no horizontal
+overflow, and produced empty warning/error logs.
 
 ## 2026-08-05 PDT — compile formation facing once and prevent generic passes through bodies
 
