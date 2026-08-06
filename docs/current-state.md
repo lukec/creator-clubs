@@ -136,6 +136,30 @@ technical details, no horizontal overflow, and no browser diagnostics. The
 public triangle card linked the Compendium at page 47 and visibly retained the
 single/double animation-review warning.
 
+## 2026-08-06 PDT result: the root homepage links distinct Glow and Motion labs
+
+**Verified route audit:** <https://luk.ec/glow/> is the canonical deployed
+**Creator Club Motion Lab**. The retired `/glow/motion/` route returns 404. The
+separate optical **Glow Club Lab** remained only at
+`studies/club-lighting-lab/index.html`, so two honest homepage links required a
+new additive route instead of sending both names to Motion Lab or reviving the
+obsolete path.
+
+**Implementation:** the Glow Club Lab is prepared for `/glow-lab/`, while
+Motion Lab keeps `/glow/`. The root `luk.ec` project list links **Glow Lab** to
+`/glow-lab/` and **Motion Lab** to `/glow/`. The Glow Lab's own stale **Sensor
+Motion Lab** link now targets the canonical `/glow/` route in both its editable
+template and generated standalone artifact. The publication boundary and study
+README record the new route split.
+
+**Verified local state:** the full web suite passes 117/117, the shared bundles
+build, `git diff --check` passes, and the staged Glow Lab artifact is byte-equal
+to its generated source copy. Desktop and 390×844 browser checks navigated from
+the actual root links into both labs. The homepage and both lab wrappers had no
+horizontal overflow or browser warnings/errors; the new Glow Lab rendered its
+interactive optical model at both sizes. Public verification is pending the
+exact Pages commit.
+
 ## 2026-08-05 PDT result: Passing Lab compiles one front-facing actor frame for every pattern
 
 The generic Passing Lab executor no longer reinterprets formation headings

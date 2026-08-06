@@ -100,8 +100,8 @@ assumed diffusion kernels with fitted handle and body response profiles.
 
 ## Published studies
 
-- <https://luk.ec/glow/> — optical model and Glow DSL editor
-- <https://luk.ec/glow/motion/> — exact Motion Lab V6 WASM and juggling view
+- <https://luk.ec/glow-lab/> — optical model and Glow DSL editor
+- <https://luk.ec/glow/> — exact Motion Lab V6 WASM and juggling view
 - <https://luk.ec/glow/police/> — eight police-pattern comparisons
 
 The clubs repository remains the editable source. These generated standalone

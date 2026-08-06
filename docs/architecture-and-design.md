@@ -795,13 +795,14 @@ Publication keeps editable and generated responsibilities separate:
 creator-clubs source/build
   -> standalone static artifacts
   -> existing lukec.github.io repository
+       /glow-lab/     optical model and Glow DSL editor
        /glow/         exact-WASM Motion Lab (canonical beta entry)
        /glow/police/  pattern comparison gallery
 ```
 
-The single-club optical/Glow DSL lab remains an engineering study in this
-repository rather than a separate public route. The beta has no legacy-link
-contract, so do not duplicate Motion Lab at `/glow/motion/`.
+The single-club optical/Glow DSL lab remains an engineering study whose public
+artifact is additive at `/glow-lab/`. Motion Lab keeps its canonical `/glow/`
+route; do not duplicate it at the retired `/glow/motion/` path.
 
 The published files contain bundled renderer/effect code and no required
 runtime dependency on `unpkg`; optional wrapper libraries are stripped after

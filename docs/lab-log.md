@@ -208,6 +208,31 @@ one live 3D canvas, closed technical details, no horizontal overflow, and empty
 browser diagnostics. A separate public triangle check followed the corrected
 Compendium page-47 link and showed the animation-review warning above the stage.
 
+## 2026-08-06 PDT — linked Glow Lab and Motion Lab from the root homepage
+
+**Question:** make both the Glow Lab and Motion Lab discoverable from Luke's
+main root homepage.
+
+**Verified routing conflict:** the site checkout and live HTTP response identify
+`/glow/` as **Creator Club Motion Lab**. `/glow/motion/` is a retired 404. The
+distinct **Glow Club Lab** source still existed as a self-contained optical/Glow
+DSL study but had no current public route. Pointing both homepage labels at
+`/glow/` would hide that distinction; restoring `/glow/motion/` would contradict
+the canonical-route decision.
+
+**Implementation decision:** preserve Motion Lab at `/glow/` and publish the
+optical study additively at `/glow-lab/`. The root project list now contains
+exact relative links for both. The Glow Lab template, generated standalone,
+README, and architecture record all use `/glow/` for its internal **Sensor
+Motion Lab** link; a regression test rejects the obsolete `/glow/motion/` URL.
+
+**Local validation:** the complete web suite passes 117/117 and the shared
+bundle build succeeds. The copied `/glow-lab/index.html` is byte-equal to the
+generated source artifact. Real browser navigation clicked each homepage link
+at desktop and 390×844 sizes, reached the correct page titles, rendered both
+interactive labs, and produced no horizontal overflow or browser diagnostics.
+Publication is pending the exact source and Pages commits.
+
 ## 2026-08-05 PDT — compile formation facing once and prevent generic passes through bodies
 
 **Question:** make the remaining Passing Lab cards execute from declarative

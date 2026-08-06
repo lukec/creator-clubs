@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { CLUB_LIGHTING_LAYOUT } from "../src/club-lighting-lab.mjs";
@@ -7,6 +8,9 @@ import {
   CREATOR_CLUB_PROFILES,
   creatorClubRadiusAt,
 } from "../src/creator-club-geometry.mjs";
+
+const lightingTemplateUrl = new URL("../../../studies/club-lighting-lab/template.fragment.html", import.meta.url);
+const lightingStandaloneUrl = new URL("../../../studies/club-lighting-lab/index.html", import.meta.url);
 
 test("lighting lab declares the measured club envelope and provisional source model", () => {
   assert.equal(CLUB_LIGHTING_LAYOUT.status, "working-hypothesis");
@@ -51,4 +55,16 @@ test("the PE body, EVA knob, and broad flat silicone cap remain separate", () =>
   assert.deepEqual(CREATOR_CLUB_PROFILES.cap.at(-2), [2.575, 0.190]);
   assert.deepEqual(CREATOR_CLUB_PROFILES.cap.at(-1), [2.575, 0.000]);
   assert.ok(creatorClubRadiusAt(1.466) >= 0.409);
+});
+
+test("lighting lab links to the canonical Motion Lab route", async () => {
+  const documents = await Promise.all([
+    readFile(lightingTemplateUrl, "utf8"),
+    readFile(lightingStandaloneUrl, "utf8"),
+  ]);
+
+  for (const document of documents) {
+    assert.match(document, /https:\/\/luk\.ec\/glow\//);
+    assert.doesNotMatch(document, /https:\/\/luk\.ec\/glow\/motion\//);
+  }
 });
