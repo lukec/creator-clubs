@@ -197,7 +197,16 @@ is therefore explicitly flagged for review.
 390×844 browser checks verified PPS source copy, the no-source label on an
 authored five-person Feast study, the corrected triangle PDF link/warning,
 closed/open technical disclosure behavior, and no horizontal overflow.
-Publication is pending the source commit and synchronized Pages deployment.
+
+**Publication:** implementation commit `2b9b9bb` is pushed on public `clubs`
+`main`. The exact Pages commit `72b434f` reached GitHub status `built` at
+`2026-08-06T03:01:56Z`. Eight cache-busted public artifacts matched the Pages
+checkout byte-for-byte: HTML, generated stage bundle, library, compiler,
+playback, physical model, generic model, and cascade module. Public mobile and
+desktop PPS checks showed the human description and direct Modern Passing link,
+one live 3D canvas, closed technical details, no horizontal overflow, and empty
+browser diagnostics. A separate public triangle check followed the corrected
+Compendium page-47 link and showed the animation-review warning above the stage.
 
 ## 2026-08-05 PDT — compile formation facing once and prevent generic passes through bodies
 

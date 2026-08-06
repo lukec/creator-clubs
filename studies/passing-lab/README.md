@@ -159,8 +159,13 @@ the closed technical disclosure, no horizontal overflow, and the triangle's
 visible source/animation mismatch warning. The 116-test suite and bundle build
 pass. The static module graph uses cache revision `source-descriptions-v22`.
 
-Publication evidence will be added after the exact source and Pages commits
-build and pass cache-busted public verification.
+Implementation commit `2b9b9bb` is on public `clubs` `main`. Pages commit
+`72b434f` reached GitHub status `built` at `2026-08-06T03:01:56Z`. The eight
+deployed artifacts matched the committed Pages checkout byte-for-byte. Public
+mobile and desktop browser checks showed the PPS description/source link, one
+live 3D canvas, closed technical details, no horizontal overflow, and no browser
+diagnostics. The corrected triangle source and its animation-review warning were
+also visible on the public page.
 
 ### Prior viewer revision: v21 causal PPS token ownership
 

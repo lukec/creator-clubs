@@ -123,8 +123,18 @@ passes 116/116, and `git diff --check` passes. Desktop browser review showed the
 PPS source summary/link without the prior fact wall. At 390×844, the published
 PPS card, an authored five-person Feast study, and the corrected triangle source
 all fit without horizontal overflow; technical details remained closed by
-default and opened on request. Publication is pending the exact `main` and
-Pages commits.
+default and opened on request.
+
+**Verified publication:** implementation commit `2b9b9bb` is pushed on public
+`clubs` `main`. Pages commit `72b434f` reached the exact GitHub `built` state at
+`2026-08-06T03:01:56Z`. Cache-busted public copies of the page, generated stage
+bundle, library, compiler, playback, physical model, generic model, and cascade
+module are byte-equal to that Pages checkout. Live mobile and desktop browser
+checks at <https://luk.ec/passing-lab/?v=72b434f#pattern=pps> showed the PPS
+description and Modern Passing link above the animation, one 3D canvas, closed
+technical details, no horizontal overflow, and no browser diagnostics. The
+public triangle card linked the Compendium at page 47 and visibly retained the
+single/double animation-review warning.
 
 ## 2026-08-05 PDT result: Passing Lab compiles one front-facing actor frame for every pattern
 
