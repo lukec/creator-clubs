@@ -110,13 +110,19 @@ test("a boundary catch is available to that hand before its next launch", () => 
 test("PPS launches only the hand declared by its compiled six-beat execution plan", () => {
   const pattern = getPassingPattern("pps");
   assert.equal(pattern.loopBeats, 6);
-  for (let beat = 0; beat < pattern.loopBeats; beat += 1) {
+  for (let beat = 0; beat < pattern.loopBeats * 2; beat += 1) {
     const sample = sampleInventory(pattern, beat + 0.5);
-    assert.equal(sample.airborne.length, 2);
     sample.airborne.forEach((club) => {
-      assert.equal(club.hand, pattern.events.find((event) => event.beat === beat && event.juggler === club.juggler).hand);
+      const launchBeat = ((club.launchBeat % pattern.loopBeats) + pattern.loopBeats) % pattern.loopBeats;
+      assert.equal(club.hand, pattern.events.find((event) => event.beat === launchBeat && event.juggler === club.juggler).hand);
     });
   }
+  assert.equal(sampleInventory(pattern, 0.5).airborne.length, 2);
+  assert.equal(sampleInventory(pattern, 1.5).airborne.length, 2);
+  assert.equal(sampleInventory(pattern, 2.5).airborne.length, 2);
+  const opening = sampleInventory(pattern, 0.5).airborne.find((club) => club.juggler === "left");
+  const continuation = sampleInventory(pattern, 3.5).airborne.find((club) => club.juggler === "right" && club.hand === "left");
+  assert.equal(continuation.id, opening.id, "the opening pass token supplies its target hand's throw three beats later");
 });
 
 test("Passing Lab transport retains Sky/Earth/Pass and snaps accurately between beats", () => {

@@ -1,6 +1,6 @@
-import { compilePassingPattern, passingCatchHand } from "./passing-pattern-compiler.mjs?build=throw-semantics-v20";
+import { compilePassingPattern, passingCatchHand } from "./passing-pattern-compiler.mjs?build=causal-pps-v21";
 
-export const PASSING_LIBRARY_VERSION = 2;
+export const PASSING_LIBRARY_VERSION = 3;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const freeze = (value) => Object.freeze(value);
@@ -16,6 +16,11 @@ export const PASSING_THROW_PROFILES = freeze({
   single: freeze({ flightBeats: 1, spinsByKind: freeze({ pass: 1.5, self: 1 }), heightMultiplier: 1 }),
   double: freeze({ flightBeats: 2, spinsByKind: freeze({ pass: 2.5, self: 2 }), heightMultiplier: 2 }),
 });
+// Standard six-club half-synchronous patterns are siteswap 3 / 3p. A single's
+// `flightBeats` still describes its nominal airborne duration; this separate
+// cycle says when that same token must next leave a hand. Do not collapse the
+// physical throw profile and token ownership schedule into one field again.
+export const SIX_CLUB_HALF_SYNCHRONOUS_TOKEN_CYCLE_BEATS = 3;
 
 const performer = (id, name, x, z, facing) => freeze({ id, name, x, z, facing });
 const event = (beat, juggler, hand, kind, target, options = {}) => {
@@ -23,6 +28,7 @@ const event = (beat, juggler, hand, kind, target, options = {}) => {
   const throwType = options.throwType || (kind === "hold" ? "hold" : "single");
   const profile = PASSING_THROW_PROFILES[throwType];
   if (!profile) throw new RangeError(`unknown passing throw type ${throwType}`);
+  const flightBeats = options.flightBeats ?? profile.flightBeats;
   return freeze({
     beat, juggler, hand, kind, target: target || null,
     // The semantic path owns the receiving hand: straights change hands while
@@ -30,7 +36,9 @@ const event = (beat, juggler, hand, kind, target, options = {}) => {
     catchHand: options.catchHand ?? passingCatchHand(hand, path),
     path,
     throwType,
-    flightBeats: options.flightBeats ?? profile.flightBeats,
+    flightBeats,
+    tokenCycleBeats: options.tokenCycleBeats ?? flightBeats,
+    tokenCycleSource: options.tokenCycleBeats === undefined ? "flight-default" : "declared",
     spins: options.spins ?? profile.spinsByKind[kind],
     heightMultiplier: options.heightMultiplier ?? profile.heightMultiplier,
     startPose: options.startPose || "side-head-down",
@@ -58,7 +66,10 @@ function facingPair(id, title, sequence, summary, terminology, difficulty = "eas
     hand,
     kind,
     kind === "pass" ? people[1 - personIndex].id : person.id,
-    { path: kind === "pass" ? "straight" : "self" },
+    {
+      path: kind === "pass" ? "straight" : "self",
+      tokenCycleBeats: SIX_CLUB_HALF_SYNCHRONOUS_TOKEN_CYCLE_BEATS,
+    },
   )));
   return compilePassingPattern({
     id, title, peopleCount: 2, formation: "facing pair", clubCount: 6,
@@ -89,7 +100,7 @@ const FIVE_PEOPLE = freeze([
 ]);
 const token = (kind, target, hand, options = {}) => ({ kind, target, hand, ...options });
 function scheduledPattern({ id, title, people, formation, clubCount, tempo = 100, rows, summary, terminology, difficulty = "medium", basis = "original schedule study", references = [], startingPhase = "documented convention", inventoryAllocation, inventoryMode }) {
-  const events = rows.flatMap((row, beat) => Object.entries(row).map(([juggler, item]) => event(beat, juggler, item.hand, item.kind, item.target || juggler, { path: item.path || (item.kind === "pass" ? "straight" : "self"), throwType: item.throwType, note: item.note || "", flightBeats: item.flightBeats, spins: item.spins, heightMultiplier: item.heightMultiplier, catchHand: item.catchHand })));
+  const events = rows.flatMap((row, beat) => Object.entries(row).map(([juggler, item]) => event(beat, juggler, item.hand, item.kind, item.target || juggler, { path: item.path || (item.kind === "pass" ? "straight" : "self"), throwType: item.throwType, note: item.note || "", flightBeats: item.flightBeats, tokenCycleBeats: item.tokenCycleBeats, spins: item.spins, heightMultiplier: item.heightMultiplier, catchHand: item.catchHand })));
   return compilePassingPattern({ id, title, peopleCount: people.length, formation, clubCount, summary, tempo, loopBeats: rows.length, performers: people, events: freeze(events), countIn: DEFAULT_COUNT_IN, terminology, difficulty, basis, startingPhase, inventoryAllocation, inventoryMode, provenance: provenance(basis === "source-backed" ? "Original event schedule based on independently researched timing facts; no source prose, diagrams, graphics, code, or bulk data copied." : "Original explicit schedule study. It is a reviewable convention, not a claim of a canonical published start.", references) });
 }
 function ringPattern({ id, title, people, formation, sequence, step = 1, summary, terminology, difficulty = "medium", basis = "original schedule study", references = [] }) {

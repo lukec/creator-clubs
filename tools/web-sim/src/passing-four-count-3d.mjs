@@ -1,16 +1,11 @@
-import { getPassingPattern } from "./passing-library.mjs?build=throw-semantics-v20";
+import { PASSING_PATTERNS, getPassingPattern } from "./passing-library.mjs?build=causal-pps-v21";
 
 // This is a deliberately narrow physical path. The wider Passing Lab catalogue
-// remains schedule-viewer data; only the four canonical face-to-face
-// two-person counts continuously sample as causal six-club 3D token timelines.
+// remains on the compiled-pattern executor unless its declarative data proves
+// that it is a synchronous, single-throw, face-to-face six-club pattern with a
+// causal three-beat token continuation.
 export const FOUR_COUNT_3D_PATTERN_ID = "four-count";
-export const PHYSICAL_TWO_PERSON_PATTERN_IDS = Object.freeze([
-  "one-count",
-  "two-count",
-  "three-count",
-  FOUR_COUNT_3D_PATTERN_ID,
-]);
-export const FOUR_COUNT_3D_VERSION = 16;
+export const FOUR_COUNT_3D_VERSION = 17;
 // This is a first-order teaching model, not a claim to measured biomechanics.
 // It deliberately uses SI units all the way through the 1× transport so that
 // the animation duration follows the sampled Earth-gravity trajectories.
@@ -399,47 +394,58 @@ const handSignFor = (hand) => {
   throw new RangeError("left or right hand is required");
 };
 
-// The physical player intentionally reads the four approved schedules from
-// Passing Lab's declarative card data.  It does not reinterpret the library's
-// viewer-only `flightBeats`, `spins`, or nominal tempo fields: the gravity
-// timing and single-pass handling policy remain this module's physical layer.
-// The adapter is deliberately narrow. If a card stops being the synchronized
-// 2-person / six-club face-to-face contract, it remains in the honest 2D
-// schedule viewer instead of receiving invented choreography here.
-function synchronousFacingPairPhysicalAdapter(patternId) {
-  const pattern = getPassingPattern(patternId);
-  if (!PHYSICAL_TWO_PERSON_PATTERN_IDS.includes(patternId)) {
-    throw new RangeError(`unsupported physical two-person pattern: ${patternId}`);
-  }
-  if (pattern.peopleCount !== 2 || pattern.clubCount !== 6 || pattern.performers.length !== 2) {
-    throw new RangeError(`${patternId} must remain a 2-person, six-club pattern`);
+const physicalPatternById = (patternId) => PASSING_PATTERNS.find((pattern) => pattern.id === patternId) || null;
+
+function inspectSynchronousFacingPairPhysicalPattern(pattern) {
+  const unsupported = (reason) => freeze({ supported: false, reason, schedule: freeze([]) });
+  if (!pattern) return unsupported("The selected card does not exist in the passing library.");
+  if (pattern.peopleCount !== 2 || pattern.clubCount !== 6 || pattern.formation !== "facing pair"
+    || pattern.performers?.length !== 2) {
+    return unsupported("Physical 3D requires a declarative two-person, six-club facing pair.");
   }
   const personIds = pattern.performers.map((person) => person.id);
-  if (!personIds.includes("left") || !personIds.includes("right")) {
-    throw new RangeError(`${patternId} must retain the declared left/right facing-pair identities`);
+  if (new Set(personIds).size !== 2 || !personIds.includes("left") || !personIds.includes("right")) {
+    return unsupported("Physical 3D requires the facing pair's left/right performer identities.");
   }
-  const byBeat = Array.from({ length: pattern.loopBeats }, (_, phraseBeat) => {
+  if (pattern.inventoryAllocation
+    && personIds.some((personId) => pattern.inventoryAllocation[personId] !== 3)) {
+    return unsupported("Physical 3D requires three opening clubs per performer.");
+  }
+  if (!Number.isInteger(pattern.loopBeats) || pattern.loopBeats < 1
+    || !Array.isArray(pattern.events) || pattern.events.length !== pattern.loopBeats * 2) {
+    return unsupported("Physical 3D requires one declarative event per performer on every beat.");
+  }
+
+  const schedule = [];
+  for (let phraseBeat = 0; phraseBeat < pattern.loopBeats; phraseBeat += 1) {
     const row = pattern.events.filter((entry) => entry.beat === phraseBeat);
-    if (row.length !== 2 || new Set(row.map((entry) => entry.juggler)).size !== 2) {
-      throw new RangeError(`${patternId} beat ${phraseBeat} must declare one event for each participant`);
-    }
     const entries = Object.fromEntries(row.map((entry) => [entry.juggler, entry]));
     const left = entries.left;
     const right = entries.right;
-    if (!left || !right || left.kind === "hold" || right.kind === "hold"
-      || left.kind !== right.kind || left.hand !== right.hand
-      || left.catchHand !== right.catchHand) {
-      throw new RangeError(`${patternId} beat ${phraseBeat} is not a synchronized facing-pair event row`);
+    if (row.length !== 2 || new Set(row.map((entry) => entry.juggler)).size !== 2
+      || !left || !right || left.kind !== right.kind || left.hand !== right.hand
+      || left.catchHand !== right.catchHand || left.path !== right.path
+      || left.throwType !== right.throwType) {
+      return unsupported(`Beat ${phraseBeat + 1} is not a synchronized facing-pair event row.`);
     }
     for (const entry of row) {
-      const expectedTarget = entry.kind === "pass"
-        ? (entry.juggler === "left" ? "right" : "left")
-        : entry.juggler;
-      if (entry.target !== expectedTarget) {
-        throw new RangeError(`${patternId} beat ${phraseBeat} must retain its declared ${entry.kind} target`);
+      const isSupportedPass = entry.kind === "pass"
+        && entry.path === "straight"
+        && entry.target === (entry.juggler === "left" ? "right" : "left")
+        && entry.spins === 1.5;
+      const isSupportedSelf = entry.kind === "self"
+        && entry.path === "self"
+        && entry.target === entry.juggler
+        && entry.spins === 1;
+      if (entry.throwType !== "single" || entry.flightBeats !== 1
+        || entry.tokenCycleBeats !== FOUR_COUNT_3D_THROW_CYCLE_BEATS
+        || entry.tokenCycleSource !== "declared"
+        || entry.heightMultiplier !== 1 || entry.catchHand === entry.hand
+        || (!isSupportedPass && !isSupportedSelf)) {
+        return unsupported(`Beat ${phraseBeat + 1} contains a throw outside the physical single straight-pass/self profile.`);
       }
     }
-    return Object.freeze({
+    schedule.push(freeze({
       phraseBeat,
       kind: left.kind,
       hand: left.hand,
@@ -447,15 +453,47 @@ function synchronousFacingPairPhysicalAdapter(patternId) {
       label: left.kind === "pass"
         ? `synchronised ${left.hand}-hand 540° single pass`
         : `${left.hand} self`,
-      events: Object.freeze({ left, right }),
-    });
-  });
+      events: freeze({ left, right }),
+    }));
+  }
+
+  for (const entry of pattern.events) {
+    const nextBeat = mod(entry.beat + FOUR_COUNT_3D_THROW_CYCLE_BEATS, pattern.loopBeats);
+    const nextEvent = schedule[nextBeat].events[entry.target];
+    if (!nextEvent || nextEvent.hand !== entry.catchHand) {
+      return unsupported(`The ${entry.juggler} beat-${entry.beat + 1} token has no compatible three-beat continuation from ${entry.target}'s ${entry.catchHand} hand.`);
+    }
+  }
+  return freeze({ supported: true, reason: "", schedule: freeze(schedule) });
+}
+
+const PHYSICAL_TWO_PERSON_INSPECTIONS = new Map(
+  PASSING_PATTERNS.map((pattern) => [pattern.id, inspectSynchronousFacingPairPhysicalPattern(pattern)]),
+);
+
+export const PHYSICAL_TWO_PERSON_PATTERN_IDS = freeze(
+  PASSING_PATTERNS
+    .filter((pattern) => PHYSICAL_TWO_PERSON_INSPECTIONS.get(pattern.id).supported)
+    .map((pattern) => pattern.id),
+);
+
+// The physical player intentionally reads every supported schedule from
+// Passing Lab's declarative card data. It does not reinterpret nominal tempo:
+// Earth gravity and the single-throw handling policy remain this physical
+// layer. A card that stops satisfying the structural contract automatically
+// returns to the generic compiled-pattern executor.
+function synchronousFacingPairPhysicalAdapter(patternId) {
+  const pattern = physicalPatternById(patternId);
+  const inspection = PHYSICAL_TWO_PERSON_INSPECTIONS.get(patternId)
+    || inspectSynchronousFacingPairPhysicalPattern(pattern);
+  if (!inspection.supported) throw new RangeError(`${patternId || "selected card"}: ${inspection.reason}`);
+  const personIds = pattern.performers.map((person) => person.id);
   return Object.freeze({
     patternId,
     title: pattern.title,
     loopBeats: pattern.loopBeats,
     people: Object.freeze(personIds),
-    schedule: Object.freeze(byBeat),
+    schedule: inspection.schedule,
   });
 }
 
@@ -2068,13 +2106,16 @@ export function firstPersonCameraPoseForSample(sample, mode = "audience") {
 }
 
 export function selectFourCount3DPattern(selectedPatternId) {
-  const supported = PHYSICAL_TWO_PERSON_PATTERN_IDS.includes(selectedPatternId);
+  const pattern = physicalPatternById(selectedPatternId);
+  const inspection = PHYSICAL_TWO_PERSON_INSPECTIONS.get(selectedPatternId)
+    || inspectSynchronousFacingPairPhysicalPattern(pattern);
+  const supported = inspection.supported;
   return freeze({
     supported,
     selectedPatternId: selectedPatternId || null,
     reason: supported
-      ? `The selected 2-person ${getPassingPattern(selectedPatternId).title} runs the dedicated six-club 3D foundation.`
-      : "Physical 3D is currently available only for the canonical 2-person 1-, 2-, 3-, and 4-count cards; this card stays in the schedule viewer.",
+      ? `The selected 2-person ${pattern.title} structurally qualifies for the causal six-club 3D foundation.`
+      : `${inspection.reason} This card uses the generic compiled-pattern executor.`,
     animationOwner: supported ? "Passing Lab host transport" : "Passing Lab schedule viewer",
     concurrentAnimationCount: supported ? 1 : 0,
   });

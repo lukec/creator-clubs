@@ -1,4 +1,4 @@
-import { eventsAtBeat } from "./passing-library.mjs?build=throw-semantics-v20";
+import { eventsAtBeat } from "./passing-library.mjs?build=causal-pps-v21";
 
 export const COUNT_IN_BEATS = 2;
 
@@ -75,8 +75,18 @@ function groupedTokens(tokens, performers) {
   return new Map(performers.map((person) => [person.id, tokens.filter((token) => token.personId === person.id).map((token) => ({ ...token }))]));
 }
 
-function chooseThrownToken(held, hand, allowFallback = false) {
-  const handIndex = held.findIndex((token) => token.hand === hand);
+function chooseThrownToken(held, hand, allowFallback = false, launchBeat = null) {
+  const dueIndex = Number.isInteger(launchBeat)
+    ? held.findIndex((token) => token.nextLaunchBeat === launchBeat)
+    : -1;
+  if (dueIndex >= 0) {
+    if (held[dueIndex].hand !== hand) return undefined;
+    return held.splice(dueIndex, 1)[0];
+  }
+  const handIndex = held.findIndex((token) => (
+    token.hand === hand
+    && (!Number.isInteger(launchBeat) || token.nextLaunchBeat === undefined || token.nextLaunchBeat > launchBeat)
+  ));
   if (handIndex >= 0) return held.splice(handIndex, 1)[0];
   return allowFallback ? held.splice(0, 1)[0] : undefined;
 }
@@ -127,12 +137,28 @@ function advanceLedgerBoundary(pattern, ledger, beat) {
   eventsAtBeat(pattern, beat).forEach((event) => {
     if (event.kind === "hold") return;
     const held = ledger.heldByPerson.get(event.juggler);
-    const token = chooseThrownToken(held, event.hand);
+    const token = chooseThrownToken(held, event.hand, false, beat);
     if (!token) throw new RangeError(`${pattern.id}: ${event.juggler} has no ${event.hand}-hand club available for absolute beat ${beat + 1}`);
     const flightBeats = throwDuration(pattern, event);
+    const tokenCycleBeats = Number(event.tokenCycleBeats ?? flightBeats);
+    if (!Number.isInteger(tokenCycleBeats) || tokenCycleBeats < flightBeats) {
+      throw new RangeError(`${pattern.id}: ${event.juggler} ${event.kind} on beat ${event.beat + 1} has an invalid token cycle`);
+    }
+    const unreservedToken = { ...token };
+    delete unreservedToken.nextLaunchBeat;
+    delete unreservedToken.nextPersonId;
+    delete unreservedToken.nextHand;
+    const reservedToken = event.tokenCycleSource === "declared"
+      ? {
+        ...unreservedToken,
+        nextLaunchBeat: beat + tokenCycleBeats,
+        nextPersonId: event.target,
+        nextHand: event.catchHand,
+      }
+      : unreservedToken;
     ledger.activeFlights.push({
       event,
-      token,
+      token: reservedToken,
       launchBeat: beat,
       catchBeat: beat + flightBeats,
       flightBeats,

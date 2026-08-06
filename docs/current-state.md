@@ -50,6 +50,41 @@ three inward-facing performers; a desktop check of Double PPS at beat 2 showed
 single selfs. The remaining useful next action is physical review of that
 cross-feed hand convention; any correction belongs in event data.
 
+## 2026-08-05 PDT result: PPS now releases before catching and preserves causal club identity
+
+Luke confirmed the governing invariant: a catch must never enter a hand that
+still holds another club. The live PPS animation violated it because the
+compiler started a right-start PPS with `L2/R1`, then the generic gesture made
+the opening passes hand-connected at beat `0.80` before the receiving left-hand
+throws released at beat `1.20`.
+
+Passing Lab now separates nominal flight time from token recurrence. PPS
+singles remain `flightBeats: 1`; their independently declared
+`tokenCycleBeats: 3` makes the opening right-pass club the exact token thrown by
+the partner's left hand three beats later. Compiler version 4 validates those
+continuations after hand-period mirroring, derives `L1/R2` for PPS (`L2/R1` for
+PPS-left), and playback reserves the due token rather than selecting any club
+available in the hand.
+
+The detailed physical selector no longer relies on a four-ID whitelist. It
+derives 12 supported six-club facing-pair cards from their synchronized
+single-throw rows and valid three-beat catch-hand continuations. PPS therefore
+uses the gravity-derived model whose outgoing beat-one left throw releases at
+approximately `1.581` before the incoming opening pass catches at approximately
+`1.752`. Dense `0.025`-beat sweeps across every supported card prove unique
+live `(performer, hand)` holder slots after opening release.
+
+**Verified local state:** the full web suite passes 115/115, the generated stage
+bundle rebuilds, and `git diff --check` passes. Slow browser QA at PPS beat
+`1.67` showed four airborne and two hand-connected clubs; at beat `1.99` it
+showed two airborne and four hand-connected clubs, with no stacked catch.
+
+**Boundary:** the remaining 36 generic cards do not yet independently declare
+token recurrence and are now labelled that way. Their formation and throw
+profiles still execute, but they are not claimed as causally validated
+siteswaps. Publication evidence will be recorded after the exact `main` and
+Pages commits build and pass cache-busted live verification.
+
 ## 2026-08-05 PDT result: Passing Lab compiles one front-facing actor frame for every pattern
 
 The generic Passing Lab executor no longer reinterprets formation headings

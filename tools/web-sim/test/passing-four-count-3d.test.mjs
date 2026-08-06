@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
-import { getPassingPattern } from "../src/passing-library.mjs";
+import { PASSING_PATTERNS, getPassingPattern } from "../src/passing-library.mjs";
 import {
   ADULT_JUGGLER_HEIGHT_METRES,
   EARTH_GRAVITY_METRES_PER_SECOND_SQUARED,
@@ -87,6 +87,7 @@ const horizontalCrossBodyYaw = (axis, person) => Math.atan2(
   Math.abs(dot(axis, person.right)),
   dot(axis, person.forward),
 );
+const mod = (value, divisor) => ((value % divisor) + divisor) % divisor;
 const quaternionMultiply = (left, right) => ({
   x: left.w * right.x + left.x * right.w + left.y * right.z - left.z * right.y,
   y: left.w * right.y - left.x * right.z + left.y * right.w + left.z * right.x,
@@ -808,20 +809,51 @@ test("each of the six tokens cycles through inherited self motion and scheduled 
   assert.ok(handModes.has("return") || handModes.has("catch"), "caught clubs stay connected through a hand return rather than parking");
 });
 
-test("the physical stage supports only the four declared two-person count cards and reads their exact event rows", () => {
-  assert.deepEqual(PHYSICAL_TWO_PERSON_PATTERN_IDS, ["one-count", "two-count", "three-count", "four-count"]);
-  const expected = {
-    "one-count": ["pass:right:left", "pass:left:right"],
-    "two-count": ["pass:right:left", "self:left:right"],
-    "three-count": ["pass:right:left", "self:left:right", "self:right:left", "pass:left:right", "self:right:left", "self:left:right"],
-    "four-count": ["pass:right:left", "self:left:right", "self:right:left", "self:left:right"],
-  };
-  Object.entries(expected).forEach(([patternId, events]) => {
+test("the physical stage derives every supported synchronous facing pair from declarative structure", () => {
+  assert.deepEqual(PHYSICAL_TWO_PERSON_PATTERN_IDS, [
+    "one-count",
+    "two-count",
+    "three-count",
+    "four-count",
+    "pps",
+    "bookends",
+    "countdown",
+    "one-count-left",
+    "two-count-left",
+    "three-count-left",
+    "four-count-left",
+    "pps-left",
+  ]);
+  PHYSICAL_TWO_PERSON_PATTERN_IDS.forEach((patternId) => {
     const pattern = getPassingPattern(patternId);
     const sample = samplePhysicalTwoPerson3D(patternId, 0, { camera: "audience" });
+    assert.equal(pattern.peopleCount, 2);
+    assert.equal(pattern.clubCount, 6);
+    assert.equal(pattern.formation, "facing pair");
+    assert.ok(pattern.events.every((entry) => entry.throwType === "single"));
+    assert.ok(pattern.events.every((entry) => entry.flightBeats === 1));
+    assert.ok(pattern.events.every((entry) => entry.tokenCycleBeats === FOUR_COUNT_3D_THROW_CYCLE_BEATS));
+    assert.ok(pattern.events.every((entry) => entry.tokenCycleSource === "declared"));
+    assert.ok(pattern.events.every((entry) => (
+      entry.kind === "pass" ? entry.path === "straight" : entry.kind === "self" && entry.path === "self"
+    )));
+    pattern.events.forEach((entry) => {
+      const nextBeat = mod(entry.beat + FOUR_COUNT_3D_THROW_CYCLE_BEATS, pattern.loopBeats);
+      const continuation = pattern.events.find((candidate) => (
+        candidate.beat === nextBeat && candidate.juggler === entry.target
+      ));
+      assert.ok(continuation, `${patternId} ${entry.juggler} beat ${entry.beat + 1} has a three-beat target continuation`);
+      assert.equal(continuation.hand, entry.catchHand, `${patternId} routes the caught token into its next launch hand`);
+    });
     assert.equal(sample.physical, true);
     assert.equal(sample.schedule.length, pattern.loopBeats);
-    assert.deepEqual(sample.schedule.map((entry) => `${entry.kind}:${entry.hand}:${entry.catchHand}`), events, `${patternId} derives the canonical declarative rows`);
+    assert.deepEqual(
+      sample.schedule.map((entry) => `${entry.kind}:${entry.hand}:${entry.catchHand}`),
+      pattern.events
+        .filter((entry) => entry.juggler === "left")
+        .map((entry) => `${entry.kind}:${entry.hand}:${entry.catchHand}`),
+      `${patternId} derives the exact declarative rows`,
+    );
     for (let beat = -2; beat <= 30; beat += 0.125) {
       const frame = samplePhysicalTwoPerson3D(patternId, beat);
       assert.equal(frame.total, 6, `${patternId} preserves six tokens at ${beat}`);
@@ -829,9 +861,44 @@ test("the physical stage supports only the four declared two-person count cards 
       assert.equal(frame.handConnected.length + frame.airborne.length, 6, `${patternId} accounts for every token at ${beat}`);
     }
   });
-  ["pps", "one-count-left", "v-feed-2-4", "missing"].forEach((id) => {
-    assert.equal(selectFourCount3DPattern(id).supported, false, `${id} remains the explicit 2D fallback`);
-    assert.equal(sampleSelectedPassing3D(id, 0).physical, false, `${id} never starts a competing 3D player`);
+  PASSING_PATTERNS
+    .filter((pattern) => !PHYSICAL_TWO_PERSON_PATTERN_IDS.includes(pattern.id))
+    .forEach((pattern) => {
+      assert.equal(selectFourCount3DPattern(pattern.id).supported, false, `${pattern.id} remains on the generic executor`);
+    });
+  ["v-feed-2-4", "double-pps-cross-feed", "directed-triangle-waltz", "missing"].forEach((id) => {
+    assert.equal(selectFourCount3DPattern(id).supported, false, `${id} does not satisfy the physical facing-pair contract`);
+    assert.equal(sampleSelectedPassing3D(id, 0).physical, false, `${id} never starts the physical two-person player`);
+  });
+});
+
+test("PPS starts R-L-R and carries each caught token into its three-beat continuation", () => {
+  for (const personId of ["left", "right"]) {
+    const countIn = samplePhysicalTwoPerson3D("pps", -0.5);
+    const personClubs = countIn.clubs.filter((club) => club.holderPersonId === personId);
+    assert.equal(personClubs.filter((club) => club.holder.hand === "right").length, 2, `${personId} starts PPS with two right-hand clubs`);
+    assert.equal(personClubs.filter((club) => club.holder.hand === "left").length, 1, `${personId} starts PPS with one left-hand club`);
+  }
+  const openingToken = samplePhysicalTwoPerson3D("pps", 0.75).clubs.find((club) => club.id === "left-club-1");
+  const continuation = samplePhysicalTwoPerson3D("pps", 3.75).clubs.find((club) => club.id === openingToken.id);
+  assert.equal(openingToken.sourcePersonId, "left");
+  assert.equal(openingToken.hand, "right");
+  assert.equal(openingToken.targetPersonId, "right");
+  assert.equal(openingToken.catchHand, "left");
+  assert.equal(continuation.sourcePersonId, openingToken.targetPersonId);
+  assert.equal(continuation.hand, openingToken.catchHand);
+  assert.equal(continuation.launchBeat, openingToken.launchBeat + FOUR_COUNT_3D_THROW_CYCLE_BEATS);
+});
+
+test("every structurally supported pattern has one live club holder per hand after opening release", () => {
+  PHYSICAL_TWO_PERSON_PATTERN_IDS.forEach((patternId) => {
+    const pattern = getPassingPattern(patternId);
+    const endBeat = Math.max(12, pattern.loopBeats * 2);
+    for (let beat = FOUR_COUNT_3D_FORWARD_LOAD_BEATS; beat <= endBeat; beat += 0.025) {
+      const sample = samplePhysicalTwoPerson3D(patternId, beat);
+      const holders = sample.handConnected.map((club) => `${club.holder.personId}:${club.holder.hand}`);
+      assert.equal(new Set(holders).size, holders.length, `${patternId} has unique holder keys at ${beat.toFixed(3)}`);
+    }
   });
 });
 
@@ -902,7 +969,8 @@ test("camera choices use literal sampled participant eyes for Left/Right and kee
   assert.equal(selectFourCount3DPattern("three-count").concurrentAnimationCount, 1);
   assert.equal(sampleSelectedPassing3D("three-count", 1).physical, true);
   assert.equal(sampleSelectedPassing3D("four-count", 1).physical, true);
-  assert.equal(selectFourCount3DPattern("pps").concurrentAnimationCount, 0);
+  assert.equal(selectFourCount3DPattern("pps").concurrentAnimationCount, 1);
+  assert.equal(sampleSelectedPassing3D("pps", 1).physical, true);
 
   const desktopFov = fittedVerticalFov(29, FOUR_COUNT_3D_CAMERA_REFERENCE_ASPECT);
   const portraitFov = fittedVerticalFov(29, 390 / 844);

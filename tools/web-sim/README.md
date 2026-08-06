@@ -29,7 +29,8 @@ future movable view stays out of the motion and effect code.
 Passing Lab uses a data-to-motion pipeline. `passing-library.mjs` supplies
 authored events, `passing-pattern-compiler.mjs` validates them and completes
 their alternating-hand execution period, `passing-playback.mjs` maintains a
-strict persistent club ledger across multi-beat flights, and
+strict persistent club ledger across multi-beat flights and declared token
+continuations, and
 `passing-generic-3d.mjs` samples the compiled object without importing the
 catalogue or branching on pattern IDs. `passing-four-count-stage.mjs` is the
 reusable Three.js renderer for that sample. Pattern-specific teaching
@@ -40,13 +41,24 @@ The user-confirmed pass vocabulary is semantic rather than diagrammatic:
 `straight` means opposite-hand reception (right-to-left or left-to-right), and
 `crossing` means same-hand reception (right-to-right or left-to-left). The
 event's literal `target` owns formation topology independently. Every throw also
-declares `throwType`, `flightBeats`, `spins`, and `heightMultiplier`; compiler
+declares `throwType`, `flightBeats`, `tokenCycleBeats`, `spins`, and
+`heightMultiplier`; compiler
 validation rejects contradictory catch hands and duplicate
 arrival-beat/receiver/hand slots. The ten-club directed triangle therefore
 declares its passes as two-beat doubles with 2.5 rotations and twice the generic
 single-pass arc rise. Self throws default independently to singles, so a rare
 non-single self requires an explicit event override. Those numeric profiles are
 animation policy, not measured ballistics.
+
+Flight time and token recurrence are separate data. In standard six-club
+half-synchronous facing pairs, a normal throw retains the one-beat nominal
+single profile while the same club is reserved for its next throw three beats
+later. The compiler validates each explicitly declared continuation only after
+it has completed the alternating-hand period; playback then selects that due
+token rather than any convenient club in the hand. Patterns without an
+independent token-cycle declaration retain the generic compatibility policy and
+are labelled as such in Passing Lab instead of being presented as causally
+validated siteswaps.
 
 Passing world coordinates use `0° = +z/downstage` and `90° =
 +x/audience-right`. Compiler output owns the normalized forward/right actor

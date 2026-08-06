@@ -57,6 +57,8 @@ test("PPS notation compiles into its alternating-hand execution period", () => {
   assert.equal(pattern.executionPlan.sourceLoopBeats, 3);
   assert.equal(pattern.executionPlan.handPeriodMultiplier, 2);
   assert.equal(pattern.loopBeats, 6);
+  assert.ok(pattern.events.every((event) => event.flightBeats === 1));
+  assert.ok(pattern.events.every((event) => event.tokenCycleBeats === 3));
   assert.deepEqual(leftActions, [
     "pass:right->left",
     "pass:left->right",
@@ -159,6 +161,20 @@ test("the compiler rejects path-hand mismatches and invalid throw profile number
   assert.throws(() => compilePassingPattern({
     ...pair,
     events: [
+      singlePass({ juggler: "a", target: "b", tokenCycleBeats: 1.5 }),
+      singlePass({ juggler: "b", target: "a" }),
+    ],
+  }), /tokenCycleBeats must be a non-negative integer/);
+  assert.throws(() => compilePassingPattern({
+    ...pair,
+    events: [
+      singlePass({ juggler: "a", target: "b", flightBeats: 2, tokenCycleBeats: 1 }),
+      singlePass({ juggler: "b", target: "a" }),
+    ],
+  }), /tokenCycleBeats cannot be shorter than flightBeats/);
+  assert.throws(() => compilePassingPattern({
+    ...pair,
+    events: [
       singlePass({ juggler: "a", target: "b", heightMultiplier: Number.NaN }),
       singlePass({ juggler: "b", target: "a" }),
     ],
@@ -181,6 +197,22 @@ test("the compiler rejects two clubs arriving at one hand, including a self arri
       singlePass({ juggler: "c", target: "c", kind: "self", path: "self", spins: 1 }),
     ],
   }), /send two clubs to a's left hand/);
+});
+
+test("the compiler validates a declared token cycle after hand-period mirroring", () => {
+  assert.throws(() => compilePassingPattern({
+    id: "broken-token-cycle",
+    loopBeats: 1,
+    clubCount: 6,
+    performers: [
+      { id: "a", x: 0, z: 0, facing: 0 },
+      { id: "b", x: 0, z: 2, facing: 180 },
+    ],
+    events: [
+      singlePass({ juggler: "a", target: "b", tokenCycleBeats: 2 }),
+      singlePass({ juggler: "b", target: "a", tokenCycleBeats: 2 }),
+    ],
+  }), /has no b left-hand continuation at beat 1/);
 });
 
 test("initial hand demand accounts for a double that is still airborne on the next beat", () => {

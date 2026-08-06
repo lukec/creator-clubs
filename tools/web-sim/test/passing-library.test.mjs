@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { PASSING_PATTERNS, PASSING_THROW_PROFILES, eventsAtBeat, getPassingPattern, passingStateHash, validatePassingPattern } from "../src/passing-library.mjs";
+import { PASSING_PATTERNS, PASSING_THROW_PROFILES, SIX_CLUB_HALF_SYNCHRONOUS_TOKEN_CYCLE_BEATS, eventsAtBeat, getPassingPattern, passingStateHash, validatePassingPattern } from "../src/passing-library.mjs";
 import { oppositePassingHand } from "../src/passing-pattern-compiler.mjs";
 
 test("Passing Lab has independently declared schedules from two through five people", () => {
@@ -52,6 +52,26 @@ test("throw profiles describe holds, singles, and the directed triangle doubles"
       .every((event) => event.throwType === "single"),
     "catalogue selfs remain singles unless an individual self event explicitly declares a rare exception",
   );
+});
+
+test("six-club facing pairs separate single flight/spin/height from siteswap-3 token timing", () => {
+  const facingPairs = PASSING_PATTERNS.filter((pattern) => pattern.peopleCount === 2);
+  assert.equal(SIX_CLUB_HALF_SYNCHRONOUS_TOKEN_CYCLE_BEATS, 3);
+  assert.equal(facingPairs.length, 12);
+  facingPairs.forEach((pattern) => {
+    assert.ok(pattern.events.every((event) => event.throwType === "single"), `${pattern.id} keeps ordinary single throws`);
+    assert.ok(pattern.events.every((event) => event.flightBeats === 1), `${pattern.id} keeps the nominal single flight profile`);
+    assert.ok(pattern.events.every((event) => event.tokenCycleBeats === SIX_CLUB_HALF_SYNCHRONOUS_TOKEN_CYCLE_BEATS), `${pattern.id} uses 3 / 3p token timing`);
+    assert.ok(pattern.events.every((event) => event.tokenCycleSource === "declared"), `${pattern.id} explicitly owns its token cycle`);
+  });
+  assert.deepEqual(getPassingPattern("pps").executionPlan.initialHandAllocation, {
+    left: { left: 1, right: 2 },
+    right: { left: 1, right: 2 },
+  });
+  assert.deepEqual(getPassingPattern("pps-left").executionPlan.initialHandAllocation, {
+    left: { left: 2, right: 1 },
+    right: { left: 2, right: 1 },
+  });
 });
 
 test("double PPS cross-feed declares its same-hand crossing exchanges as singles", () => {

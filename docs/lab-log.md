@@ -89,6 +89,70 @@ Cache-busted live browser checks covered the directed triangle at 390x844 and
 the Double PPS crossing beat on desktop; the latter exposed 12 declared clubs,
 four airborne, left-to-left crossing passes, and single selfs.
 
+## 2026-08-05 PDT — PPS release-before-catch and causal token-cycle repair
+
+**Question:** Luke reported that PPS still caught clubs into hands already
+holding clubs and reiterated that this must never occur. Determine the failure
+in the execution model, fix it from pattern data rather than a PPS animation
+branch, commit on `main`, and publish the completed viewer.
+
+**User-confirmed behavior:** right-start PPS begins with two clubs in the right
+hand and one in the left. An outgoing club must release before a pass arrives
+in that same hand. A normal pass/self here remains a single; “three” describes
+the club's recurrence through the pattern, not a triple-height or three-beat
+single trajectory.
+
+**Verified pre-change defect:** the compiled PPS count-in was `L2/R1` for each
+performer. The generic timeline then made an opening pass hand-connected to the
+receiver at elapsed beat `0.80`; the receiver's left-hand throw did not begin
+until the next beat and did not release until `1.20`. A deterministic public
+frame at `0.88` consequently assigned three visible clubs to each receiving
+left hand. The event rows themselves were correct `P-right, P-left, S-right`
+plus their mirrored-hand continuation; token timing and ownership were wrong.
+
+**Source-backed semantics:** half-synchronous siteswap `3` is a normal self
+whose token recurs three beats later, and `3p` is the corresponding pass. This
+supports a three-beat token cycle but does not justify changing the repository's
+single flight profile from one to three beats.
+
+**Implementation:** library version 3 adds a resolved `tokenCycleBeats` and
+tracks whether that cycle was independently declared. All six-club facing-pair
+events explicitly declare three while retaining `throwType: single` and
+`flightBeats: 1`. Compiler version 4 validates non-negative cycle data,
+requires a cycle at least as long as flight, completes the alternating-hand
+period, validates each declared `(target, catchHand, beat + cycle)`
+continuation, and uses recurrence rather than flight to derive count-in hand
+demand. Playback tags a caught token with its due launch and selects that token
+before an unreserved hand token. PPS compiles to `L1/R2`; PPS-left compiles to
+`L2/R1`.
+
+Physical selector version 17 now derives support from declarative structure
+rather than four hardcoded IDs. The resulting 12-card set is 1-/2-/3-/4-count,
+PPS, Bookends, Countdown, and five left-start variants. The selector requires
+two facing performers, six clubs, synchronized rows, ordinary straight
+passes/selfs, and a valid three-beat catch-hand continuation. There is no PPS
+branch in the sampler or renderer.
+
+**Validation:** the rebuilt 115-test web suite passes. Focused tests prove all
+12 physical cards preserve six token IDs, PPS count-in is R-L-R, the opening
+token becomes its partner's opposite-hand throw at `+3`, and every
+hand-connected holder key is unique at `0.025`-beat intervals after opening
+release. The physical timing releases the beat-one left throws at about
+`1.581` and catches the opening right passes at about `1.752`. Local rendered
+review at beat `1.67` showed four airborne/two hand-connected clubs, followed
+at beat `1.99` by two airborne/four hand-connected clubs. UI facts expose the
+three-beat declared token cycle and the stage reports the detailed physical
+model.
+
+**Boundary/open question:** the other 36 generic cards still use a
+compatibility token-cycle default and now say “token cycle not independently
+declared.” A strict hypothetical three-beat audit found hand-chain mismatches
+in `three-round`, `five-round`, and `double-pps-cross-feed`; their real recurrence
+must be confirmed from pattern knowledge before declaring them causal. No club,
+firmware, BenTo state, or device setting changed.
+
+**Publication:** pending the source commit and synchronized Pages deployment.
+
 ## 2026-08-05 PDT — compile formation facing once and prevent generic passes through bodies
 
 **Question:** make the remaining Passing Lab cards execute from declarative

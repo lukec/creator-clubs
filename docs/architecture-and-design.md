@@ -25,7 +25,7 @@ animations:
 pattern card in passing-library.mjs
   -> passing-pattern-compiler.mjs validates and completes the hand period
   -> executionPlan plus explicit events
-  -> passing-playback.mjs assigns and moves persistent multi-beat club tokens
+  -> passing-playback.mjs assigns, reserves, and moves persistent club tokens
   -> passing-generic-3d.mjs samples hands, clubs, paths, duration, height, and spin
   -> passing-four-count-stage.mjs renders the sampled state
 ```
@@ -34,7 +34,8 @@ The page passes the selected compiled pattern object into the stage. The
 generic model does not import the catalogue, inspect a pattern ID, or contain a
 PPS branch. It reads performer positions, throw/catch hands, target, pass/self
 kind, semantic path, throw type, flight duration, height multiplier, and spin
-count from the compiled data. Pattern-specific teaching information should
+count from the compiled data. It also reads an independently declared token
+cycle when the pattern owns one. Pattern-specific teaching information should
 therefore be represented as data for technique, placement, route, or throw
 profile overrides. A dedicated sampler is justified only when a narrower
 pattern family has materially stronger physical/anatomical validation.
@@ -52,9 +53,14 @@ continuation. This is why the three-symbol PPS notation `P P S` executes as six
 throws: `P-right, P-left, S-right, P-left, P-right, S-left`. After completing
 that execution period, the compiler indexes each non-hold arrival by wrapped
 beat, target performer, and catch hand. Two clubs may not occupy the same
-arrival slot. It also derives the minimum safe initial allocation per hand from
-the whole cycle. Playback throws only the token actually present in the
-declared hand; it cannot quietly borrow from the other hand. The retained
+arrival slot. Flight duration and token recurrence are deliberately distinct:
+`flightBeats` describes the nominal trajectory while `tokenCycleBeats`
+describes when that same token must next leave its target catch hand. Declared
+token continuations are checked after hand-period completion, and startup hand
+allocation uses the token cycle rather than confusing it with flight time.
+Playback reserves every caught token for that future launch and throws the due
+token actually present in the declared hand; it cannot quietly borrow from the
+other hand. The retained
 non-conserving Stage V visual study is explicitly exempt and remains labelled
 `visual-study`.
 
@@ -82,11 +88,13 @@ and runtime diagnostics remain truthful.
 That presentation contract must not erase the difference between two data
 contracts:
 
-- `samplePhysicalTwoPerson3D` is the bounded physical foundation for canonical
-  two-person 1-, 2-, 3-, and 4-count cards. It owns the six persistent clubs,
+- `samplePhysicalTwoPerson3D` is the bounded physical foundation for the 12
+  structurally qualifying six-club facing-pair cards. Support is derived from
+  the declarative contract: synchronized rows, single straight passes/selfs,
+  and a valid three-beat token continuation. It owns the six persistent clubs,
   Earth-gravity timing, seam grips, articulated arms, collision checks, and
   participant-eye cameras.
-- `sampleGenericPassing3D` is the compiled-pattern executor for the other 44
+- `sampleGenericPassing3D` is the compiled-pattern executor for the other 36
   cards. It owns exact declared inventory, formation coordinates and facing,
   event targets, semantic pass/self paths, declared throw profiles, articulated
   visual gestures, and performer camera placement. It enforces a conservative
@@ -108,7 +116,10 @@ Both contracts use one legible pass gesture: ready outside, hand and club travel
 upward/inward together, release near the torso midline at `0.14 m` lateral
 offset, and catch farther outside at `0.34 m`. The generic event contract keeps
 the named `throwType` alongside its resolved flight duration, rotation count,
-and arc-height multiplier. The directed ten-club triangle explicitly declares
+token-cycle policy, and arc-height multiplier. A normal six-club facing-pair
+single is therefore `flightBeats: 1` and `tokenCycleBeats: 3`; changing the
+former to three would create a slow three-beat trajectory rather than causal
+siteswap-3 ownership. The directed ten-club triangle explicitly declares
 each pass as a two-beat double with 2.5 rotations and twice the single-pass arc
 rise; the compiler does not infer this from club count or pattern ID. Self
 throws independently default to singles; only an explicit per-event override

@@ -17,11 +17,12 @@ test("the all-pattern 3D stage replaces the initial 2D canvas while semantic sta
   assert.match(page, /function hasThreeStage\(\)/, "every playable card is routed through the shared 3D stage capability");
   assert.match(page, /compiled-pattern 3D executor/, "non-dedicated cards identify the shared compiled executor");
   assert.match(page, /card supplies a compiled execution plan/, "the page describes the pattern-data to executor boundary");
-  assert.match(page, /throw types, pass paths, durations, spin counts, height multipliers/, "the shared executor help exposes event-defined throw semantics");
+  assert.match(page, /throw types, pass paths, flight durations, token cycles, spin counts, height multipliers/, "the shared executor help exposes event-defined throw semantics");
   assert.match(page, /declared double/, "pattern facts summarize declared double passes");
   assert.match(page, /const semantics = \(entry\)/, "visible and semantic event descriptions share one throw formatter");
   assert.match(page, /chip\.setAttribute\('aria-label', accessibleDetail\)/, "event chips expose their complete throw profile accessibly");
   assert.match(page, /entry\.flightBeats/, "event detail includes declared flight duration");
+  assert.match(page, /entry\.tokenCycleBeats/, "event detail includes declared token recurrence");
   assert.match(page, /entry\.spins/, "event detail includes declared spin count");
   assert.match(page, /entry\.heightMultiplier/, "event detail includes declared height multiplier");
   assert.match(page, /renderer\.render\(physicalPlayhead, \{ pattern, camera:/, "the page feeds the selected compiled pattern object into the model");
@@ -43,7 +44,7 @@ test("the all-pattern 3D stage replaces the initial 2D canvas while semantic sta
 });
 
 test("the static Passing Lab module graph uses one cache revision", async () => {
-  const revision = "throw-semantics-v20";
+  const revision = "causal-pps-v21";
   const files = await Promise.all([
     fs.readFile(pageUrl, "utf8"),
     fs.readFile(sourceUrl("passing-library.mjs"), "utf8"),

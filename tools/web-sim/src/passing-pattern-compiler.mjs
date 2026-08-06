@@ -1,5 +1,5 @@
 const freeze = (value) => Object.freeze(value);
-export const PASSING_PATTERN_COMPILER_VERSION = 3;
+export const PASSING_PATTERN_COMPILER_VERSION = 4;
 export const PASSING_FACING_CONVENTION = freeze({
   angleUnit: "degrees",
   zeroDirection: "downstage (+z)",
@@ -9,6 +9,7 @@ const HANDS = freeze(["left", "right"]);
 const ACTIONS = new Set(["hold", "pass", "self"]);
 const THROW_TYPES = new Set(["hold", "single", "double"]);
 const PASS_PATHS = new Set(["straight", "crossing"]);
+const TOKEN_CYCLE_SOURCES = new Set(["flight-default", "declared"]);
 
 export const oppositePassingHand = (hand) => {
   if (!HANDS.includes(hand)) throw new RangeError(`unknown passing hand ${hand}`);
@@ -61,11 +62,13 @@ function validatePassFacing(pattern, event, performers) {
 function validateEventSemantics(pattern, event) {
   if (!THROW_TYPES.has(event.throwType)) throw new RangeError(`${pattern.id}: ${event.juggler} has unknown throw type ${event.throwType}`);
   if (!Number.isInteger(event.flightBeats) || event.flightBeats < 0) throw new RangeError(`${pattern.id}: ${event.juggler} flightBeats must be a non-negative integer`);
+  if (!Number.isInteger(event.tokenCycleBeats) || event.tokenCycleBeats < 0) throw new RangeError(`${pattern.id}: ${event.juggler} tokenCycleBeats must be a non-negative integer`);
+  if (!TOKEN_CYCLE_SOURCES.has(event.tokenCycleSource)) throw new RangeError(`${pattern.id}: ${event.juggler} has unknown token cycle source ${event.tokenCycleSource}`);
   if (!Number.isFinite(event.spins) || event.spins < 0) throw new RangeError(`${pattern.id}: ${event.juggler} spins must be a non-negative finite number`);
   if (!Number.isFinite(event.heightMultiplier) || event.heightMultiplier < 0) throw new RangeError(`${pattern.id}: ${event.juggler} heightMultiplier must be a non-negative finite number`);
 
   if (event.kind === "hold") {
-    if (event.throwType !== "hold" || event.flightBeats !== 0 || event.spins !== 0 || event.heightMultiplier !== 0) {
+    if (event.throwType !== "hold" || event.flightBeats !== 0 || event.tokenCycleBeats !== 0 || event.spins !== 0 || event.heightMultiplier !== 0) {
       throw new RangeError(`${pattern.id}: hold events require the zero-height hold throw profile`);
     }
     if (event.path !== "self") throw new RangeError(`${pattern.id}: hold events require path self`);
@@ -74,6 +77,9 @@ function validateEventSemantics(pattern, event) {
 
   if (event.throwType === "hold" || event.flightBeats < 1 || event.heightMultiplier <= 0) {
     throw new RangeError(`${pattern.id}: ${event.kind} events require a positive-flight throw profile`);
+  }
+  if (event.tokenCycleBeats < event.flightBeats) {
+    throw new RangeError(`${pattern.id}: ${event.juggler} tokenCycleBeats cannot be shorter than flightBeats`);
   }
   if (event.kind === "pass" && !PASS_PATHS.has(event.path)) throw new RangeError(`${pattern.id}: pass path must be straight or crossing`);
   if (event.kind === "self" && event.path !== "self") throw new RangeError(`${pattern.id}: self events require path self`);
@@ -126,6 +132,28 @@ function validateEvents(pattern, { arrivals = false } = {}) {
   if (arrivals) validateArrivalSlots(pattern);
 }
 
+function validateDeclaredTokenContinuations(pattern) {
+  const outgoing = new Map(pattern.events
+    .filter((event) => event.kind !== "hold")
+    .map((event) => [`${event.beat}:${event.juggler}:${event.hand}`, event]));
+  const claimed = new Map();
+  pattern.events
+    .filter((event) => event.kind !== "hold" && event.tokenCycleSource === "declared")
+    .forEach((event) => {
+      const continuationBeat = modulo(event.beat + event.tokenCycleBeats, pattern.loopBeats);
+      const slot = `${continuationBeat}:${event.target}:${event.catchHand}`;
+      const continuation = outgoing.get(slot);
+      if (!continuation) {
+        throw new RangeError(`${pattern.id}: ${event.juggler}'s beat-${event.beat + 1} token has no ${event.target} ${event.catchHand}-hand continuation at beat ${continuationBeat + 1}`);
+      }
+      const previous = claimed.get(slot);
+      if (previous) {
+        throw new RangeError(`${pattern.id}: ${previous.juggler} and ${event.juggler} claim the same token continuation at beat ${continuationBeat + 1}`);
+      }
+      claimed.set(slot, event);
+    });
+}
+
 function compileOrientation(pattern) {
   const performers = freeze(Object.fromEntries(pattern.performers.map((person) => {
     const forward = passingFacingVector(person.facing);
@@ -166,13 +194,15 @@ function initialHandAllocation(pattern) {
   if (pattern.inventoryMode === "visual-study") return freeze({});
   const running = new Map(pattern.performers.flatMap((person) => HANDS.map((hand) => [handKey(person.id, hand), 0])));
   const required = new Map(running);
-  const pendingArrivals = new Map();
-  const maxFlightBeats = Math.max(...pattern.events.map((event) => event.flightBeats), 0);
+  const pendingContinuations = new Map();
+  const maxTokenCycleBeats = Math.max(...pattern.events.map((event) => event.tokenCycleBeats), 0);
   // Start from the real count-in state: every token is held and no prior-loop
-  // throw is already in the air. Continue through one fully populated period
-  // after the longest flight so delayed hand demand cannot hide at the seam.
-  for (let beat = 0; beat < maxFlightBeats + pattern.loopBeats; beat += 1) {
-    (pendingArrivals.get(beat) || []).forEach((event) => {
+  // throw is already in the air. A token becomes available to its receiving
+  // hand on its declared next-throw cycle, which is distinct from nominal air
+  // time. Continue through one fully populated period after the longest cycle
+  // so delayed hand demand cannot hide at the seam.
+  for (let beat = 0; beat < maxTokenCycleBeats + pattern.loopBeats; beat += 1) {
+    (pendingContinuations.get(beat) || []).forEach((event) => {
       const key = handKey(event.target, event.catchHand);
       running.set(key, running.get(key) + 1);
     });
@@ -182,9 +212,9 @@ function initialHandAllocation(pattern) {
       const next = running.get(key) - 1;
       running.set(key, next);
       required.set(key, Math.max(required.get(key), -next));
-      const arrivalBeat = beat + event.flightBeats;
-      if (!pendingArrivals.has(arrivalBeat)) pendingArrivals.set(arrivalBeat, []);
-      pendingArrivals.get(arrivalBeat).push(event);
+      const continuationBeat = beat + event.tokenCycleBeats;
+      if (!pendingContinuations.has(continuationBeat)) pendingContinuations.set(continuationBeat, []);
+      pendingContinuations.get(continuationBeat).push(event);
     });
   }
   const inventory = performerInventory(pattern);
@@ -214,7 +244,12 @@ function mirrorEvent(event, beatOffset) {
 
 export function compilePassingPattern(rawPattern) {
   const sourceLoopBeats = rawPattern.loopBeats;
-  const sourceEvents = rawPattern.events.map((event) => freeze({ ...event }));
+  const sourceEvents = rawPattern.events.map((event) => freeze({
+    ...event,
+    tokenCycleBeats: event.tokenCycleBeats ?? event.flightBeats,
+    tokenCycleSource: event.tokenCycleSource
+      || (event.tokenCycleBeats === undefined ? "flight-default" : "declared"),
+  }));
   let events = sourceEvents;
   let loopBeats = sourceLoopBeats;
   let handPeriodMultiplier = 1;
@@ -235,6 +270,7 @@ export function compilePassingPattern(rawPattern) {
     events,
   };
   validateEvents(compiled, { arrivals: true });
+  validateDeclaredTokenContinuations(compiled);
   if (compiled.inventoryMode !== "visual-study" && !balanced(handFlow(compiled, compiled.events))) throw new RangeError(`${compiled.id}: mirrored continuation does not produce periodic hand flow`);
   return freeze({
     ...compiled,

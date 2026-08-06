@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import { CREATOR_CLUB_DIMENSIONS, makeCreatorClubGeometries } from "./creator-club-geometry.mjs";
-import { getPassingPattern } from "./passing-library.mjs?build=throw-semantics-v20";
+import { getPassingPattern } from "./passing-library.mjs?build=causal-pps-v21";
 import {
   FOUR_COUNT_3D_PATTERN_ID,
   FOUR_COUNT_3D_SHOULDER_RIG_POLICY,
@@ -9,8 +9,8 @@ import {
   getFourCount3DCamera,
   sampleSelectedPassing3D,
   selectFourCount3DPattern,
-} from "./passing-four-count-3d.mjs?build=throw-semantics-v20";
-import { sampleGenericPassing3D } from "./passing-generic-3d.mjs?build=throw-semantics-v20";
+} from "./passing-four-count-3d.mjs?build=causal-pps-v21";
+import { sampleGenericPassing3D } from "./passing-generic-3d.mjs?build=causal-pps-v21";
 
 const METRES_TO_SCENE_UNITS = 10;
 // The desktop stage is wide, but a phone should retain an intelligible pair
@@ -497,9 +497,9 @@ export function createPassingFourCountStage({ mount, ariaLabel = "True 3D six-cl
 
 globalThis.PassingFourCount3D = freeze({
   create: createPassingFourCountStage,
-  // Every playable card has a Three.js stage. Four canonical facing-pair cards
-  // retain the narrower validated physical sampler; the rest use the explicit
-  // declarative schedule adapter.
+  // Every playable card has a Three.js stage. Structurally qualifying causal
+  // six-club facing pairs retain the narrower validated physical sampler; the
+  // rest use the explicit declarative schedule adapter.
   isSupported: (patternOrId) => {
     try { sampleGenericPassing3D(typeof patternOrId === "string" ? getPassingPattern(patternOrId) : patternOrId, -2); return true; } catch { return false; }
   },

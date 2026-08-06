@@ -110,22 +110,57 @@ Three.js surface. Per-performer views use the active 3D sample's eye placement
 and gaze direction; they are model cameras, not measured eye tracking or a
 claim of photorealism.
 
-## Physical 3D foundation: canonical two-person 1/2/3/4 counts
+## Physical 3D foundation: causal six-club facing pairs
 
-The cards **1-count**, **2-count**, **3-count**, and **4-count · Every
-Others** share an intentionally bounded physical 3D player.  It reads each
-card's declared synchronous, face-to-face event rows rather than guessing from
-the name, then tracks exactly six persistent tokens: three initially assigned
-to each person.  Every token carries a self or scheduled pass into its next
-event three beats later; nothing is parked merely to make the formation look
-full.  Sky starts from the low ready side as a whole-arm carry, Earth lowers
-the carry together, and Pass begins the visible hand-connected load before
-ballistic release. The other 44 cards use the compiled-pattern 3D executor: it
-renders their declared people, formation, target routes, and entire
-club inventory, but does not claim the detailed model's physical/collision
-coverage.
+Twelve cards now share the intentionally bounded physical 3D player: 1-, 2-,
+3-, and 4-count, PPS, Bookends, Countdown, and their five authored left-start
+variants. Support is derived from data, not an ID list. A card must declare a
+synchronous face-to-face six-club schedule, one single straight-pass/self row
+per person and beat, and a valid three-beat token continuation from every catch
+hand into that token's next throw. The player tracks exactly six persistent
+tokens: three initially assigned to each person. Every token carries a self or
+scheduled pass into its next event three beats later; nothing is parked merely
+to make the formation look full. Sky starts from the low ready side as a
+whole-arm carry, Earth lowers the carry together, and Pass begins the visible
+hand-connected load before ballistic release. The other 36 cards use the
+compiled-pattern 3D executor: it renders their declared people, formation,
+target routes, and entire club inventory, but does not claim the detailed
+model's physical/collision coverage.
 
-### Current viewer revision: v20 declarative throw and pass semantics
+### Current viewer revision: v21 causal PPS token ownership
+
+Luke's catch invariant is now executable: after the opening release, no two
+live clubs may be attached to the same performer/hand. The visible PPS defect
+had two independent causes. Its count-in compiler chose two left-hand clubs and
+one right-hand club for a right-start pattern, and the generic animation marked
+the opening right pass caught before the receiver's incumbent left-hand club
+released.
+
+The event schema now separates a throw's nominal flight from its token
+recurrence. Every facing-pair throw remains an ordinary single with
+`flightBeats: 1`; an explicit `tokenCycleBeats: 3` states that the caught club
+must supply the target catch hand's throw three beats after its prior launch.
+Compiler version 4 validates that continuation after completing the
+alternating-hand period and uses it to derive PPS's `L1/R2` count-in
+(`L2/R1` for the left-start variant). Playback reserves that specific token
+instead of choosing any club found in the hand. Patterns without an independent
+token-cycle declaration are labelled honestly in the UI rather than being
+claimed as causally validated.
+
+Physical selector version 17 derives the 12-card support set from this
+declarative contract. In dense `0.025`-beat sweeps across every supported card,
+each hand-connected club had a unique performer/hand holder after opening
+release. Local slow rendered PPS review showed the next left-hand clubs released
+by beat `1.67` (four airborne, two hand-connected) before the opening passes
+became caught by beat `1.99` (two airborne, four hand-connected). The static
+module graph uses cache revision `causal-pps-v21`.
+
+The generic catalogue is not yet a fully causal siteswap model. Its cards keep
+their existing compatibility token-cycle default until their recurrence is
+declared and validated from pattern knowledge. This avoids inventing
+per-pattern corrections while making the remaining modelling boundary visible.
+
+### Prior viewer revision: v20 declarative throw and pass semantics
 
 **User-confirmed terminology:** a straight pass changes hands at the receiver;
 a crossing pass remains in the same hand. `target` continues to encode formation
