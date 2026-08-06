@@ -160,6 +160,11 @@ their existing compatibility token-cycle default until their recurrence is
 declared and validated from pattern knowledge. This avoids inventing
 per-pattern corrections while making the remaining modelling boundary visible.
 
+Source commit `5e2d352` is on `main`. Pages commit `b9c749f` reached the exact
+`built` state, and all eight public Passing Lab files matched the committed site
+bytes. Cache-busted live PPS review repeated the release-before-catch transition
+at beats `1.67` and `1.83` with the dedicated physical six-club model.
+
 ### Prior viewer revision: v20 declarative throw and pass semantics
 
 **User-confirmed terminology:** a straight pass changes hands at the receiver;

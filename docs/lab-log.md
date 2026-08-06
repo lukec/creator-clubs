@@ -151,7 +151,13 @@ in `three-round`, `five-round`, and `double-pps-cross-feed`; their real recurren
 must be confirmed from pattern knowledge before declaring them causal. No club,
 firmware, BenTo state, or device setting changed.
 
-**Publication:** pending the source commit and synchronized Pages deployment.
+**Publication:** source commit `5e2d352` is pushed directly to `main`. Pages
+commit `b9c749f` reached status `built` at `2026-08-06T01:26:30Z`. All eight
+cache-busted public files were byte-equal to the committed Pages checkout.
+The live PPS canvas identified the dedicated physical model, six clubs, and a
+three-beat declared token cycle. A reset opening-cycle scrub showed four
+airborne/two hand-connected clubs at beat `1.67`, then two airborne/four
+hand-connected clubs after the catches at beat `1.83`.
 
 ## 2026-08-05 PDT — compile formation facing once and prevent generic passes through bodies
 

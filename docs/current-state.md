@@ -82,8 +82,16 @@ showed two airborne and four hand-connected clubs, with no stacked catch.
 **Boundary:** the remaining 36 generic cards do not yet independently declare
 token recurrence and are now labelled that way. Their formation and throw
 profiles still execute, but they are not claimed as causally validated
-siteswaps. Publication evidence will be recorded after the exact `main` and
-Pages commits build and pass cache-busted live verification.
+siteswaps.
+
+**Verified publication:** source commit `5e2d352` is pushed on `main`. Pages
+commit `b9c749f` reached the exact `built` state at
+`2026-08-06T01:26:30Z`. The cache-busted public page, bundle, library, compiler,
+playback, physical selector, generic sampler, and cascade module were byte-equal
+to the committed Pages checkout. Live browser QA at
+`https://luk.ec/passing-lab/?v=b9c749f#pattern=pps` repeated the opening cycle:
+beat `1.67` had four airborne/two hand-connected clubs before beat `1.83`
+caught the incoming passes with two airborne/four hand-connected clubs.
 
 ## 2026-08-05 PDT result: Passing Lab compiles one front-facing actor frame for every pattern
 
